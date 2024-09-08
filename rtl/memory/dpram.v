@@ -56,7 +56,7 @@ defparam
 	altsyncram_component.clock_enable_input_b = "BYPASS",
 	altsyncram_component.clock_enable_output_a = "BYPASS",
 	altsyncram_component.clock_enable_output_b = "BYPASS",
-	altsyncram_component.intended_device_family = "Cyclone V",
+	altsyncram_component.intended_device_family = "Cyclone III",
 	altsyncram_component.lpm_type = "altsyncram",
 	altsyncram_component.operation_mode = "BIDIR_DUAL_PORT",
 	altsyncram_component.outdata_aclr_a = "NONE",

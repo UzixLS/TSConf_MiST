@@ -2,7 +2,6 @@ set_global_assignment -name QIP_FILE rtl/T80/T80.qip
 set_global_assignment -name VERILOG_FILE rtl/memory/dma.v
 set_global_assignment -name VERILOG_FILE rtl/memory/arbiter.v
 set_global_assignment -name VERILOG_FILE rtl/memory/sdram.v
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/memory/ddram.sv
 set_global_assignment -name VERILOG_FILE rtl/memory/dpram.v
 set_global_assignment -name VERILOG_FILE rtl/common/zsignals.v
 set_global_assignment -name VERILOG_FILE rtl/common/zports.v

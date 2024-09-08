@@ -57,9 +57,10 @@ module arbiter
 	input         c1,
 	input         c2,
 	input         c3,
+	input         cyc,
 
 	// dram.v interface
-	output [20:0] dram_addr,   // address for dram access
+	output [21:0] dram_addr,   // address for dram access
 	output        dram_req,    // dram request
 	output        dram_rnw,    // Read-NotWrite
 	output [ 1:0] dram_bsel,   // byte select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
@@ -81,11 +82,13 @@ module arbiter
 	input [ 7:0] cpu_wrdata,
 	input        cpu_req,
 	input        cpu_rnw,
+	input        cpu_csrom,
 	input        cpu_wrbsel,
 	output reg   cpu_next,		// next cycle is allowed to be used by CPU
 	output reg   cpu_strobe,	// c2 strobe
 	output reg   cpu_latch,		// c2-c3 strobe
 	output       curr_cpu_o,
+
 	// DMA
 	input [20:0] dma_addr,
 	input [15:0] dma_wrdata,
@@ -101,41 +104,51 @@ module arbiter
 
 	// TM
 	input [20:0] tm_addr,
-	input	       tm_req,
-	output       tm_next
+	input	     tm_req,
+	output       tm_next,
+
+	// ROM loader
+	input         loader_clk,
+	input  [15:0] loader_addr,
+	input   [7:0] loader_data,
+	input         loader_wr
 );
 
 assign curr_cpu_o = curr_cpu;
 
-localparam CYCLES    = 5;
+localparam CYCLES    = 6;
 
-localparam CYC_CPU   = 5'b00001;
-localparam CYC_VID   = 5'b00010;
-localparam CYC_TS    = 5'b00100;
-localparam CYC_TM    = 5'b01000;
-localparam CYC_DMA   = 5'b10000;
-localparam CYC_FREE  = 5'b00000;
+localparam CYC_CPU    = 6'b000001;
+localparam CYC_VID    = 6'b000010;
+localparam CYC_TS     = 6'b000100;
+localparam CYC_TM     = 6'b001000;
+localparam CYC_DMA    = 6'b010000;
+localparam CYC_LOADER = 6'b100000;
+localparam CYC_FREE   = 6'b000000;
 
-localparam CPU   = 0;
-localparam VIDEO = 1;
-localparam TS    = 2;
-localparam TM    = 3;
-localparam DMA   = 4;
+localparam CPU    = 0;
+localparam VIDEO  = 1;
+localparam TS     = 2;
+localparam TM     = 3;
+localparam DMA    = 4;
+localparam LOADER = 5;
 
 reg [CYCLES-1:0] curr_cycle; // type of the cycle in progress
 reg [CYCLES-1:0] next_cycle; // type of the next cycle
 
-wire next_cpu = next_cycle[CPU];
-assign next_vid = next_cycle[VIDEO];
-wire next_ts  = next_cycle[TS];
-wire next_tm  = next_cycle[TM];
-wire next_dma = next_cycle[DMA];
+wire next_cpu    = next_cycle[CPU];
+assign next_vid  = next_cycle[VIDEO];
+wire next_ts     = next_cycle[TS];
+wire next_tm     = next_cycle[TM];
+wire next_dma    = next_cycle[DMA];
+wire next_loader = next_cycle[LOADER];
 
-wire curr_cpu = curr_cycle[CPU];
-wire curr_vid = curr_cycle[VIDEO];
-wire curr_ts  = curr_cycle[TS];
-wire curr_tm  = curr_cycle[TM];
-wire curr_dma = curr_cycle[DMA];
+wire curr_cpu    = curr_cycle[CPU];
+wire curr_vid    = curr_cycle[VIDEO];
+wire curr_ts     = curr_cycle[TS];
+wire curr_tm     = curr_cycle[TM];
+wire curr_dma    = curr_cycle[DMA];
+wire curr_loader = curr_cycle[LOADER];
 
 
 // track blk_rem counter:
@@ -167,6 +180,18 @@ reg [2:0] vid_rem;      // remaining video accesses in block
 always @(posedge clk) if (c3) vid_rem <= vid_nrem;
 
 
+reg loader_wr0;
+reg [7:0] loader_data0;
+always @(posedge loader_clk) begin
+	if (loader_wr) begin
+		loader_wr0 <= 1'd1;
+		loader_data0 <= loader_data;
+	end
+	else if (cyc) begin
+		loader_wr0 <= 1'd0;
+	end
+end
+
 // next cycle decision
 wire [CYCLES-1:0] cyc_dev = tm_req ? CYC_TM : (ts_req ? CYC_TS : CYC_DMA);
 wire dev_req = ts_req || tm_req || dma_req;
@@ -174,7 +199,11 @@ wire dev_req = ts_req || tm_req || dma_req;
 wire dev_over_cpu = 0;
 
 always @* begin
-	if (video_start) begin   // video burst start 
+	if (loader_wr0) begin
+		cpu_next = 1'b0;
+		next_cycle = CYC_LOADER;
+	end
+	else if (video_start) begin   // video burst start
 		if (go) begin   // video active line - 38us-ON, 26us-ON
 			cpu_next = dev_over_cpu ? 1'b0 : !bw_full;
 			next_cycle = dev_over_cpu ? CYC_VID : (bw_full ? CYC_VID : (cpu_req ? CYC_CPU : CYC_VID));
@@ -193,15 +222,16 @@ end
 always @(posedge clk) if (c3) curr_cycle <= next_cycle;
 
 // DRAM interface
-assign dram_wrdata= curr_dma ? dma_wrdata : {cpu_wrdata,cpu_wrdata};		// write data has to be clocked at c0 in dram.v
-assign dram_bsel  = {cpu_wrbsel | next_dma, ~cpu_wrbsel | next_dma};
+assign dram_wrdata= curr_loader? {loader_data0,loader_data0} : curr_dma ? dma_wrdata : {cpu_wrdata,cpu_wrdata};  // write data has to be clocked at c0 in dram.v
+assign dram_bsel  = next_loader? {loader_addr[0], ~loader_addr[0]} : next_dma ? 2'b11 : {cpu_wrbsel, ~cpu_wrbsel};
 assign dram_req   = |next_cycle;
-assign dram_rnw   = next_cpu ? cpu_rnw : ~next_dma | dma_rnw;
-assign dram_addr	= {21{next_cpu}} & cpu_addr
-						| {21{next_vid}} & video_addr
-						| {21{next_ts }} & ts_addr
-						| {21{next_tm }} & tm_addr
-						| {21{next_dma}} & dma_addr;
+assign dram_rnw   = next_loader? 1'b0 : next_cpu ? cpu_rnw : ~next_dma | dma_rnw;
+assign dram_addr	=  {22{next_loader}} & { 1'b1, 6'b000000, loader_addr[15:1] }
+						| {22{next_cpu}} & { cpu_csrom, {6{~cpu_csrom}} & cpu_addr[20:15], cpu_addr[14:0] }
+						| {22{next_vid}} & { 1'b0, video_addr }
+						| {22{next_ts }} & { 1'b0, ts_addr }
+						| {22{next_tm }} & { 1'b0, tm_addr }
+						| {22{next_dma}} & { 1'b0, dma_addr };
 
 reg cpu_rnw_r;
 always @(posedge clk) if (c3) cpu_rnw_r <= cpu_rnw;

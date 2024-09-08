@@ -14,32 +14,32 @@
 	V0.2.8	19.10.2014	инвентирован CLK в модулях video_tmbuf, video_sfile и добавлены регистры на выходе
 	V0.2.9	02.11.2014	замена t80s, исправления в zint.v, zports.v, delta-sigma (приводит к намагничиванию динамиков)
 	WXEDA	10.03.2015  порт на девборду WXEDA
-	
+
 	http://tslabs.info/forum/viewtopic.php?f=31&t=401
 	http://zx-pk.ru/showthread.php?t=23528
-	
+
 	Copyright (c) 2014 MVV, TS-Labs, dsp, waybester, palsw
-	
+
 	All rights reserved
-	
+
 	Redistribution and use in source and synthezised forms, with or without
 	modification, are permitted provided that the following conditions are met:
-	
+
 	* Redistributions of source code must retain the above copyright notice,
 	this list of conditions and the following disclaimer.
-	
+
 	* Redistributions in synthesized form must reproduce the above copyright
 	notice, this list of conditions and the following disclaimer in the
 	documentation and/or other materials provided with the distribution.
-	
+
 	* Neither the name of the author nor the names of other contributors may
 	be used to endorse or promote products derived from this software without
 	specific prior written agreement from the author.
-	
+
 	* License is granted for non-commercial use only.  A fee may not be charged
-	for redistributions as source code or in synthesized/hardware form without 
+	for redistributions as source code or in synthesized/hardware form without
 	specific prior written agreement from the author.
-	
+
 	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 	THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -113,6 +113,7 @@ module tsconf
 	input  [24:0] PS2_MOUSE,
 	input   [5:0] joystick,
 
+	input         loader_act,
 	input  [15:0] loader_addr,
 	input   [7:0] loader_data,
 	input         loader_wr
@@ -495,6 +496,7 @@ arbiter TS07
 	.c1(c1),
 	.c2(c2),
 	.c3(c3),
+	.cyc(ce&c3),
 	.dram_addr(dram_addr),
 	.dram_req(dram_req),
 	.dram_rnw(dram_rnw),
@@ -511,6 +513,7 @@ arbiter TS07
 	.cpu_wrdata(cpu_do_bus),
 	.cpu_req(cpu_req),
 	.cpu_rnw(rd | csrom),
+	.cpu_csrom(csrom),
 	.cpu_wrbsel(cpu_wrbsel),
 	.cpu_next(cpu_next),		// next cycle is allowed to be used by CPU
 	.cpu_strobe(cpu_strobe),		// c2 strobe
@@ -527,7 +530,11 @@ arbiter TS07
 	.ts_next(ts_next),
 	.tm_addr(tm_addr),
 	.tm_req(tm_req),
-	.tm_next(tm_next)
+	.tm_next(tm_next),
+	.loader_clk(clk),
+	.loader_addr(loader_addr),
+	.loader_data(loader_data),
+	.loader_wr(loader_wr)
 );
 
 video_top TS08
@@ -673,19 +680,6 @@ zint TS13
 	.im2vect(im2vect),		//> CPU Din (2 downto 0); 	
 	.int_n(cpu_int_n_TS)
 );
-   
-// BIOS
-wire [7:0] bios_do_bus;
-dpram #(.ADDRWIDTH(16), .MEM_INIT_FILE("rtl/tsbios.mif")) BIOS
-(
-	.clock(clk),
-	.address_a({cpu_addr_20[14:0],cpu_wrbsel}),
-	.q_a(bios_do_bus),
-	
-	.address_b(loader_addr),
-	.data_b(loader_data),
-	.wren_b(loader_wr)
-);
 
 // SDRAM Controller
 sdram SE4
@@ -723,7 +717,7 @@ wire [7:0] key_scancode;
 
 keyboard SE5
 (
-	.clk(clk_28mhz),
+	.clk(clk),
 	.reset(COLD_RESET | WARM_RESET),
 	.a(cpu_a_bus[15:8]),
 	.keyb(kb_do_bus),
@@ -734,7 +728,7 @@ keyboard SE5
 
 kempston_mouse KM
 (
-	.clk_sys(clk_28mhz),
+	.clk_sys(clk),
 	.reset(reset),
 	.ps2_mouse(PS2_MOUSE),
 	.addr(cpu_a_bus[10:8]),
@@ -795,7 +789,7 @@ soundrive SE10
 reg ce_ym;
 always @(posedge clk_28mhz) begin
 	reg [2:0] div;
-	
+
 	div <= div + 1'd1;
 	ce_ym <= !div;
 end
@@ -899,7 +893,6 @@ assign RESET_OUT = reset;
 
 // CPU interface
 assign cpu_di_bus = 
-		(csrom && ~cpu_mreq_n && ~cpu_rd_n) 						?	bios_do_bus			:	// BIOS
 		(~cpu_mreq_n && ~cpu_rd_n)										?	sdr_do_bus			:	// SDRAM
 		(intack)																?	im2vect 				:
 		(gs_sel && ~cpu_rd_n)											?	gs_do_bus			:	// General Sound

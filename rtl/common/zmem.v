@@ -88,8 +88,8 @@ assign romwe_n = !(memwr && w0_we);
 assign rompg = xtpage[0][4:0];
 
 // RAM
-assign zd_ena = !rom_n_ram && memrd;
-wire ramreq = !rom_n_ram && ((memrd && !cache_hit_en) || (memwr && ramwr_en));
+assign zd_ena = memrd;
+wire ramreq = ((memrd && !cache_hit_en) || (memwr && ramwr_en));
 
 // DOS signal control
 assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && rom128 && !w0_map_n;
@@ -196,7 +196,7 @@ end
 // wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;  // debug for BM
 wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;  // asynchronous signal meaning that address requested by CPU is cached and valid
 wire cache_hit_en = cache_hit && cache_en[win];
-wire cache_inv = cache_hit && !rom_n_ram && memwr_s && ramwr_en;    // cache invalidation should be only performed if write happens to cached address
+wire cache_inv = cache_hit && memwr_s && ramwr_en;    // cache invalidation should be only performed if write happens to cached address
 
 wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
 wire [12:0] cache_a;

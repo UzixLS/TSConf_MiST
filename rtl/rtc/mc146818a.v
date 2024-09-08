@@ -77,10 +77,7 @@ always @(*) begin
 end
 
 always @(posedge CLK) begin
-	reg flg;
-
-	flg <= RTC[64];
-	if (flg != RTC[64]) begin
+	if (RTC[62] && !b_reg[7]) begin
 		seconds_reg <= RTC[7:0];
 		minutes_reg <= RTC[15:8];
 		hours_reg   <= RTC[23:16];
