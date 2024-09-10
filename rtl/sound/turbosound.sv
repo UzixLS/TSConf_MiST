@@ -32,7 +32,14 @@ module turbosound
 	output  [7:0] DO,	       // Data Out
 
 	output [11:0] CHANNEL_L, // Output channel L
-	output [11:0] CHANNEL_R  // Output channel R
+	output [11:0] CHANNEL_R, // Output channel R
+
+    input   [7:0]   IOA_in,
+    input   [7:0]   IOB_in,
+    output  [7:0]   IOA_out,
+    output  [7:0]   IOB_out,
+    output          IOA_oe,
+    output          IOB_oe
 );
 
 
@@ -145,7 +152,14 @@ jt03 ym2203_1
 	.psg_B(psg_ch_b_1),
 	.psg_C(psg_ch_c_1),
 
-	.fm_snd(opn_1)
+	.fm_snd(opn_1),
+
+	.IOA_in(IOA_in),
+	.IOB_in(IOB_in),
+	.IOA_out(IOA_out),
+	.IOB_out(IOB_out),
+	.IOA_oe(IOA_oe),
+	.IOB_oe(IOB_oe)
 );
 
 assign DO = ay_select ? DO_1 : DO_0;
