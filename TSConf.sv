@@ -71,9 +71,6 @@ localparam CONF_STR = {
 	"TSConf;;",
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
-	"O34,Stereo mix,None,25%,50%,100%;",
-	"OST,General Sound,512KB,1MB,2MB;",
-	"-;",
 	"OU,CPU Type,NMOS,CMOS;",
 	"O67,CPU Speed,3.5MHz,7MHz,14MHz;",
 	"O8,CPU Cache,On,Off;",
@@ -341,12 +338,6 @@ tsconf tsconf
 	.SD_CLK(sdclk),
 	.SD_CS_N(sdss),
 
-	.GS_ADDR(gs_mem_addr),
-	.GS_DI(gs_mem_din),
-	.GS_DO(gs_mem_dout | gs_mem_mask),
-	.GS_RD(gs_mem_rd),
-	.GS_WR(gs_mem_wr),
-	.GS_WAIT(~gs_mem_ready),
 	.SOUND_L(SOUND_L),
 	.SOUND_R(SOUND_R),
 
@@ -366,34 +357,6 @@ tsconf tsconf
 	.loader_data(ioctl_dout),
 	.loader_wr(ioctl_wr && ioctl_download && !ioctl_index && !ioctl_addr[24:16])
 );
-
-wire [20:0] gs_mem_addr;
-wire  [7:0] gs_mem_dout;
-wire  [7:0] gs_mem_din;
-wire        gs_mem_rd;
-wire        gs_mem_wr;
-wire        gs_mem_ready;
-reg   [7:0] gs_mem_mask;
-
-always_comb begin
-	gs_mem_mask = 0;
-	case(status[29:28])
-		0: if(gs_mem_addr[20:19]) gs_mem_mask = 8'hFF;
-		1: if(gs_mem_addr[20])    gs_mem_mask = 8'hFF;
-	 2,3:                        gs_mem_mask = 0;
-	endcase
-end
-
-// ddram ddram
-// (
-// 	.*,
-// 	.addr(gs_mem_addr),
-// 	.dout(gs_mem_dout),
-// 	.din(gs_mem_din),
-// 	.we(gs_mem_wr),
-// 	.rd(gs_mem_rd),
-// 	.ready(gs_mem_ready)
-// );
 
 
 reg VSync, HSync;

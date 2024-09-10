@@ -88,14 +88,6 @@ module tsconf
 	output        SD_CLK,
 	output        SD_CS_N,
 
-	// General Sound
-	output [20:0] GS_ADDR,
-	output  [7:0] GS_DI,
-	input   [7:0] GS_DO,
-	output        GS_RD,
-	output        GS_WR,
-	input         GS_WAIT,
-
 	// Audio
 	output [15:0] SOUND_L,
 	output [15:0] SOUND_R,
@@ -816,31 +808,38 @@ turbosound SE12
 
 
 // General Sound
+wire [20:0] gs_mem_addr;
+wire [7:0]  gs_mem_di;
+wire [7:0]  gs_mem_do;
+wire        gs_mem_rd;
+wire        gs_mem_wr;
+wire        gs_mem_wait;
+
 wire [14:0] gs_l;
 wire [14:0] gs_r;
 wire [7:0]  gs_do_bus;
 wire        gs_sel = ~cpu_iorq_n & cpu_m1_n & (cpu_a_bus[7:4] == 'hB && cpu_a_bus[2:0] == 'h3);
 
-gs #("rtl/sound/gs105b.mif") U15
+gs U15
 (
 	.RESET(reset | 1'b1),
 	.CLK(clk),
 	.CE(ce),
-	
+
 	.A(cpu_a_bus[3]),
 	.DI(cpu_do_bus),
 	.DO(gs_do_bus),
 	.CS_n(cpu_iorq_n | ~gs_sel),
 	.WR_n(cpu_wr_n),
 	.RD_n(cpu_rd_n),
-	
-	.MEM_ADDR(GS_ADDR),
-	.MEM_DI(GS_DI),
-	.MEM_DO(GS_DO),
-	.MEM_RD(GS_RD),
-	.MEM_WR(GS_WR),
-	.MEM_WAIT(GS_WAIT),
-	
+
+	.MEM_ADDR(gs_mem_addr),
+	.MEM_DI(gs_mem_di),
+	.MEM_DO(gs_mem_do),
+	.MEM_RD(gs_mem_rd),
+	.MEM_WR(gs_mem_wr),
+	.MEM_WAIT(gs_mem_wait),
+
 	.OUTL(gs_l),
 	.OUTR(gs_r)
 );
