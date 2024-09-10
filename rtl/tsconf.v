@@ -888,8 +888,10 @@ compressor compressor
 //-----------------------------------------------------------------------------
 // Global
 //-----------------------------------------------------------------------------
-wire reset = COLD_RESET | WARM_RESET | key_reset;
+reg reset;
 assign RESET_OUT = reset;
+always @(posedge clk)
+	reset <= COLD_RESET | WARM_RESET | key_reset;
 
 // CPU interface
 assign cpu_di_bus = 

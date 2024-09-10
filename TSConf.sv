@@ -108,13 +108,26 @@ assign CMOSCfg[27:25]= status[27:25] + 1'd1;
 
 ////////////////////   CLOCKS   ///////////////////
 wire clk_sys;
-wire locked;
-
+wire clk_ram;
 pll pll
 (
 	.inclk0(CLOCK_27),
-	.c0(clk_sys),
-	.locked(locked)
+	.c0(clk_ram),
+	.c1(clk_sys),
+	.locked()
+);
+
+altclkctrl
+#(
+	.number_of_clocks(1),
+	.clock_type("External Clock Output"),
+	.ena_register_mode("none"),
+	.intended_device_family("Cyclone III")
+)
+altclkctrl
+(
+	.inclk(clk_ram),
+	.outclk(SDRAM_CLK)
 );
 
 reg ce_28m;
@@ -312,7 +325,7 @@ tsconf tsconf
 	.SDRAM_nRAS(SDRAM_nRAS),
 	.SDRAM_CKE(SDRAM_CKE),
 	.SDRAM_nCS(SDRAM_nCS),
-	.SDRAM_CLK(SDRAM_CLK),
+	// .SDRAM_CLK(SDRAM_CLK),
 
 	.VGA_R(R),
 	.VGA_G(G),
