@@ -71,7 +71,7 @@ localparam CONF_STR = {
 	"TSConf;;",
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
-	"OU,CPU Type,NMOS,CMOS;",
+	"OU,CPU Type,CMOS,NMOS;",
 	"O67,CPU Speed,3.5MHz,7MHz,14MHz;",
 	"O8,CPU Cache,On,Off;",
 	"O9A,#7FFD span,128K,128K Auto,1024K,512K;",
@@ -344,7 +344,7 @@ tsconf tsconf
 	.COLD_RESET(init_reset | status[0]),
 	.WARM_RESET(buttons[1]),
 	.RTC(rtc),
-	.OUT0(status[30]),
+	.OUT0(~status[30]),
 
 	.CMOSCfg(CMOSCfg),
 
