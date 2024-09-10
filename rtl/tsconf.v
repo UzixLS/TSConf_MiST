@@ -823,7 +823,7 @@ wire        gs_sel = ~cpu_iorq_n & cpu_m1_n & (cpu_a_bus[7:4] == 'hB && cpu_a_bu
 
 gs #("rtl/sound/gs105b.mif") U15
 (
-	.RESET(reset),
+	.RESET(reset | 1'b1),
 	.CLK(clk),
 	.CE(ce),
 	
