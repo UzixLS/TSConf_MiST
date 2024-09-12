@@ -59,17 +59,17 @@ always @(*) begin
 	 8'h0c : Dout <= c_reg;
 	 8'h0d : Dout <= 8'b10000000;
 
-	 8'hb1 : Dout <= CMOSCfg[7:6];	// CPU Speed
-	 8'hb2 : Dout <= 0; 					// Boot device
-	 8'hb3 : Dout <= CMOSCfg[8];		// CPU Cache
-	 8'hb4 : Dout <= CMOSCfg[13:11];	// F11
-	 8'hb5 : Dout <= CMOSCfg[15:14];	// F11 bank
-	 8'hb6 : Dout <= CMOSCfg[18:16];	// Shift+F11
-	 8'hb7 : Dout <= CMOSCfg[20:19];	// Shift+F11 bank
-	 8'hb8 : Dout <= CMOSCfg[10:9];	// #7FFD
-	 8'hb9 : Dout <= CMOSCfg[23:21];	// ZX Palette
-	 8'hba : Dout <= CMOSCfg[24];		// NGS Reset
-	 8'hbb : Dout <= CMOSCfg[27:25];	// INT offset
+	//  8'hb1 : Dout <= CMOSCfg[7:6];	// CPU Speed
+	//  8'hb2 : Dout <= 0; 					// Boot device
+	//  8'hb3 : Dout <= CMOSCfg[8];		// CPU Cache
+	//  8'hb4 : Dout <= CMOSCfg[13:11];	// F11
+	//  8'hb5 : Dout <= CMOSCfg[15:14];	// F11 bank
+	//  8'hb6 : Dout <= CMOSCfg[18:16];	// Shift+F11
+	//  8'hb7 : Dout <= CMOSCfg[20:19];	// Shift+F11 bank
+	//  8'hb8 : Dout <= CMOSCfg[10:9];	// #7FFD
+	//  8'hb9 : Dout <= CMOSCfg[23:21];	// ZX Palette
+	//  8'hba : Dout <= CMOSCfg[24];		// NGS Reset
+	//  8'hbb : Dout <= CMOSCfg[27:25];	// INT offset
 
 	 8'hf0 : Dout <= KEYSCANCODE;
 	default: Dout <= CMOS_Dout;
@@ -233,7 +233,7 @@ always @(posedge CLK) begin
 end
 
 // 50 Bytes of General Purpose RAM	
-dpram #(.DATAWIDTH(8), .ADDRWIDTH(8), .MEM_INIT_FILE("rtl/rtc/CMOS.mif")) CMOS
+dpram #(.DATAWIDTH(8), .ADDRWIDTH(8), .MEM_INIT_FILE("rtl/periph/CMOS.mif")) CMOS
 (
 	.clock		(CLK),
 	.address_a	(A),

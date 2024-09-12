@@ -35,13 +35,13 @@ set_false_path -to [get_ports {AUDIO_R}]
 set_false_path -to [get_ports {LED}]
 set_false_path -from [get_ports {UART_RX}]
 
-set_multicycle_path -to {tsconf|U16|*} -setup 2
-set_multicycle_path -to {tsconf|U16|*} -hold 1
-
 set_multicycle_path -from {tsconf|CPU|*} -setup 2
 set_multicycle_path -from {tsconf|CPU|*} -hold 1
 set_multicycle_path -to {tsconf|CPU|*} -setup 2
 set_multicycle_path -to {tsconf|CPU|*} -hold 1
 
-set_multicycle_path -to {tsconf|U15|*} -setup 2
-set_multicycle_path -to {tsconf|U15|*} -hold 1
+set_multicycle_path -to {tsconf|saa1099|*} -setup 2
+set_multicycle_path -to {tsconf|saa1099|*} -hold 1
+
+set_multicycle_path -to {tsconf|gs|*} -setup 2
+set_multicycle_path -to {tsconf|gs|*} -hold 1

@@ -301,9 +301,7 @@ sd_card sd_card
 
 ////////////////////  MAIN  //////////////////////
 wire [7:0] R,G,B;
-wire HBlank,VBlank;
 wire VS, HS;
-wire ce_vid;
 wire [15:0] SOUND_L;
 wire [15:0] SOUND_R;
 
@@ -324,14 +322,11 @@ tsconf tsconf
 	.SDRAM_nCS(SDRAM_nCS),
 	// .SDRAM_CLK(SDRAM_CLK),
 
-	.VGA_R(R),
-	.VGA_G(G),
-	.VGA_B(B),
-	.VGA_HS(HS),
-	.VGA_VS(VS),
-	.VGA_HBLANK(HBlank),
-	.VGA_VBLANK(VBlank),
-	.VGA_CEPIX(ce_vid),
+	.VRED(R),
+	.VGRN(G),
+	.VBLU(B),
+	.VHSYNC(HS),
+	.VVSYNC(VS),
 
 	.SD_SO(sdmiso),
 	.SD_SI(sdmosi),
@@ -345,12 +340,13 @@ tsconf tsconf
 	.WARM_RESET(buttons[1]),
 	.RTC(rtc),
 	.OUT0(~status[30]),
+	.TAPE_IN(UART_RX),
 
 	.CMOSCfg(CMOSCfg),
 
 	.PS2_KEY({key_strobe,key_pressed,key_extended,key_code}),
 	.PS2_MOUSE(ps2_mouse),
-	.joystick(joystick_0[5:0] | joystick_1[5:0]),
+	.JOYSTICK(joystick_0 | joystick_1),
 
 	.loader_act(ioctl_download),
 	.loader_addr(ioctl_addr[15:0]),
