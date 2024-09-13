@@ -86,7 +86,7 @@ module zmem
 
   assign dos_on = win0 && opfetch_s && (za[13:8]==6'h3D) && rom128 && !w0_map_n;
   assign dos_off = !win0 && opfetch_s && !vdos;
-  assign dos = (dos_on || dos_off) ^^ dos_r;    // to make dos appear 1 clock earlier than dos_r
+  assign dos = dos_on ? 1'b1 : (dos_off ? 1'b0 : dos_r);  // to make dos appear 1 clock earlier than dos_r
 
   always @(posedge clk)
   if (rst)
@@ -127,7 +127,7 @@ module zmem
   assign cpu_wrbsel = za[0];
   assign cpu_addr[20:0] = {page, za[13:1]};
   wire [15:0] mem_d = cpu_latch ? cpu_rddata : cache_d;
-  assign zd_out = ~cpu_wrbsel ? mem_d[7:0] : mem_d[15:8];
+  assign zd_out = trdos_3dxx_hit ? trdos_3dxx_do : ~cpu_wrbsel ? mem_d[7:0] : mem_d[15:8];
 
 // Z80 controls
 
@@ -207,8 +207,8 @@ module zmem
     stall14_fin <= 1'b1;
 
     // cache
-  wire [12:0] cache_a;
-  wire [12:0] cpu_hi_addr = {page[7:0], za[13:9]};
+  wire [13:0] cache_a;
+  wire [13:0] cpu_hi_addr = {rom_n_ram, page[7:0], za[13:9]};
   // wire cache_hit = (ch_addr[7:2] != 6'b011100) && (cpu_hi_addr == cache_a) && cache_v;  // debug for BM
   wire cache_hit = (cpu_hi_addr == cache_a) && cache_v;  // asynchronous signal meaning that address requested by CPU is cached and valid
   assign cache_hit_en = cache_hit && cache_en[win];
@@ -229,7 +229,7 @@ module zmem
     .q_b(cache_d)
   );
 
-  dpram #(.DATAWIDTH(14), .ADDRWIDTH(8)) cache_addr
+  dpram #(.DATAWIDTH(15), .ADDRWIDTH(8)) cache_addr
   (
     .clock(clk),
     .address_a(ch_addr),
@@ -317,5 +317,19 @@ module zmem
   assign romoe_n = !memrd;
   assign romwe_n = !(memwr && w0_we);
   assign rompg = xtpage[0][4:0];
+
+
+  // XXX ugly workarround
+  // There are SDRAM latency-related issues with fetching opcode from correct page when entering DOS
+  // With current HDL design ROM page number isn't valid at moment of cpu_req asserting
+  // That is, there is a chance that SDRAM controller will start read cycle with an incorrect address
+  wire [7:0] trdos_3dxx_do;
+  wire trdos_3dxx_hit = dos && csrom && rompg==5'h1 && za[13:8]==6'h3D;
+  dpram #(.DATAWIDTH(8), .ADDRWIDTH(8), .MEM_INIT_FILE("rtl/z80/trdos504T_3DXX.mif")) trdos_3dxx
+  (
+    .clock (clk),
+    .address_a (za[7:0]),
+    .q_a (trdos_3dxx_do)
+  );
 
 endmodule
