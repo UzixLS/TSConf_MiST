@@ -12,13 +12,17 @@ module mc146818a
    input        CS,
 
    input [64:0] RTC,
-   input [31:0] CMOSCfg,
-
    input  [7:0] KEYSCANCODE,
+
    input        WR,
    input  [7:0] A,
    input  [7:0] DI,
-   output [7:0] DO
+   output [7:0] DO,
+
+   input        loader_WR,
+   input  [7:0] loader_A,
+   input  [7:0] loader_DI,
+   output [7:0] loader_DO
 );
    
 reg [18:0] pre_scaler =0;
@@ -59,18 +63,6 @@ always @(*) begin
 	 8'h0c : Dout <= c_reg;
 	 8'h0d : Dout <= 8'b10000000;
 
-	//  8'hb1 : Dout <= CMOSCfg[7:6];	// CPU Speed
-	//  8'hb2 : Dout <= 0; 					// Boot device
-	//  8'hb3 : Dout <= CMOSCfg[8];		// CPU Cache
-	//  8'hb4 : Dout <= CMOSCfg[13:11];	// F11
-	//  8'hb5 : Dout <= CMOSCfg[15:14];	// F11 bank
-	//  8'hb6 : Dout <= CMOSCfg[18:16];	// Shift+F11
-	//  8'hb7 : Dout <= CMOSCfg[20:19];	// Shift+F11 bank
-	//  8'hb8 : Dout <= CMOSCfg[10:9];	// #7FFD
-	//  8'hb9 : Dout <= CMOSCfg[23:21];	// ZX Palette
-	//  8'hba : Dout <= CMOSCfg[24];		// NGS Reset
-	//  8'hbb : Dout <= CMOSCfg[27:25];	// INT offset
-
 	 8'hf0 : Dout <= KEYSCANCODE;
 	default: Dout <= CMOS_Dout;
   endcase
@@ -86,7 +78,7 @@ always @(posedge CLK) begin
 		year_reg    <= RTC[47:40];
 		weeks_reg   <= RTC[55:48] + 1'b1;
 		b_reg       <= 8'b00000010;
-	end 
+	end
 
 	if (RESET) b_reg <= 8'b00000010;
 	else if (WR & CS) begin
@@ -239,7 +231,11 @@ dpram #(.DATAWIDTH(8), .ADDRWIDTH(8), .MEM_INIT_FILE("rtl/periph/CMOS.mif")) CMO
 	.address_a	(A),
 	.data_a		(DI),
 	.wren_a		(WR & CS),
-	.q_a			(CMOS_Dout)
+	.q_a			(CMOS_Dout),
+	.address_b	(loader_A),
+	.data_b		(loader_DI),
+	.wren_b		(loader_WR),
+	.q_b			(loader_DO)
 );
    
 endmodule

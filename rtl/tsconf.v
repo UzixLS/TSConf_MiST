@@ -44,9 +44,13 @@ module tsconf
   input         COLD_RESET,
   input         WARM_RESET,
   input  [64:0] RTC,
-  input  [31:0] CMOSCfg,
-  input         OUT0,
   input         TAPE_IN,
+
+  // Configuration bits
+  input         CFG_OUT0,
+  input         CFG_60HZ,
+  input         CFG_SCANDOUBLER,
+  input         CFG_VDAC,
 
   // User input
   input  [10:0] PS2_KEY,
@@ -55,8 +59,10 @@ module tsconf
 
   input         loader_act,
   input  [15:0] loader_addr,
-  input   [7:0] loader_data,
-  input         loader_wr
+  input   [7:0] loader_do,
+  output  [7:0] loader_di,
+  input         loader_wr_rom,
+  input         loader_wr_cmos
 );
 
   wire f0, f1, h0, h1, c0, c1, c2, c3;
@@ -98,11 +104,11 @@ module tsconf
   wire cfg_tape_sound = 1'b0;
   wire cfg_floppy_swap = 1'b0;
   wire int_start_wtp = 1'b0;
-  wire cfg_60hz = 1'b0;
+  wire cfg_60hz = CFG_60HZ;
   wire beeper_mux; // what is mixed to FPGA beeper output - beeper(0) or tapeout(1)
   wire tape_read;  // tapein data
   wire set_nmi;
-  wire cfg_vga_on = 1'b0;
+  wire cfg_vga_on = CFG_SCANDOUBLER;
 
   // nmi signals
   wire gen_nmi;
@@ -326,6 +332,16 @@ module tsconf
   wire [15:0] dram_do;
   wire [15:0] dram_docpu;
 
+  wire [1:0]  vred;
+  wire [1:0]  vgrn;
+  wire [1:0]  vblu;
+  wire [7:0]  vred_vdac;
+  wire [7:0]  vgrn_vdac;
+  wire [7:0]  vblu_vdac;
+  assign VRED = CFG_VDAC? vred_vdac : {vred,vred,vred,vred};
+  assign VGRN = CFG_VDAC? vgrn_vdac : {vgrn,vgrn,vgrn,vgrn};
+  assign VBLU = CFG_VDAC? vblu_vdac : {vblu,vblu,vblu,vblu};
+
   wire fclk = clk & ce;
 
 
@@ -488,8 +504,8 @@ module tsconf
     .tm_next(tm_next),
     .loader_clk(clk),
     .loader_addr(loader_addr),
-    .loader_data(loader_data),
-    .loader_wr(loader_wr)
+    .loader_data(loader_do),
+    .loader_wr(loader_wr_rom)
   );
 
   video_top video_top
@@ -502,9 +518,9 @@ module tsconf
     .c0(c0),
     .c1(c1),
     .c3(c3),
-    .vred(),
-    .vgrn(),
-    .vblu(),
+    .vred(vred),
+    .vgrn(vgrn),
+    .vblu(vblu),
     .vred_raw(vred_raw),
     .vgrn_raw(vgrn_raw),
     .vblu_raw(vblu_raw),
@@ -575,9 +591,9 @@ module tsconf
     .o_r(vred_raw),
     .o_g(vgrn_raw),
     .o_b(vblu_raw),
-    .v_r(VRED),
-    .v_g(VGRN),
-    .v_b(VBLU)
+    .v_r(vred_vdac),
+    .v_g(vgrn_vdac),
+    .v_b(vblu_vdac)
   );
 
   zmaps zmaps
@@ -882,7 +898,7 @@ module tsconf
     .RD_n(rd_n),
     .WR_n(wr_n),
     .RFSH_n(rfsh_n),
-    .OUT0(OUT0),
+    .OUT0(CFG_OUT0),
     .A(a),
     .DI(di),
     .DO(d)
@@ -927,16 +943,19 @@ module tsconf
   mc146818a mc146818a
   (
     .RESET(rst),
-    .CLK(fclk),
+    .CLK(clk),
     .ENA(ena_0_4375mhz),
     .CS(1),
-    .KEYSCANCODE(key_scancode),
     .RTC(RTC),
-    .CMOSCfg(CMOSCfg),
+    .KEYSCANCODE(key_scancode),
     .WR(wait_start_gluclock & ~wr_n),
     .A(wait_addr),
     .DI(d),
-    .DO(wait_read)
+    .DO(wait_read),
+    .loader_WR(loader_wr_cmos),
+    .loader_A(loader_addr[7:0]),
+    .loader_DI(loader_do),
+    .loader_DO(loader_di)
   );
 
 

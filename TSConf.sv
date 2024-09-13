@@ -62,7 +62,7 @@ localparam VGA_BITS = 6;
 localparam bit BIG_OSD = 1;
 
 
-assign LED = ~ioctl_download & UART_TX & UART_RX;
+assign LED = ~ioctl_download & ~ioctl_upload & UART_TX & UART_RX;
 assign UART_TX = 1'b1;
 
 
@@ -70,37 +70,20 @@ assign UART_TX = 1'b1;
 localparam CONF_STR = {
 	"TSConf;;",
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
+	"O4,Vsync,49 Hz,60 Hz;",
+	"O5,VDAC1,ON,OFF;",
+	"O6,CPU Type,CMOS,NMOS;",
 	"-;",
-	"OU,CPU Type,CMOS,NMOS;",
-	"O67,CPU Speed,3.5MHz,7MHz,14MHz;",
-	"O8,CPU Cache,On,Off;",
-	"O9A,#7FFD span,128K,128K Auto,1024K,512K;",
-	"OLN,ZX Palette,Default,B.black,Light,Pale,Dark,Grayscale,Custom;",
-	"OPR,INT Offset,1,2,3,4,5,6,7,0;",
-	"-;",
-	"OBD,F11 Reset,boot.$C,sys.rom,ROM;",
-	"OEF,           bank,TR-DOS,Basic 48,Basic 128,SYS;",
-	"OGI,Shift+F11 Reset,ROM,boot.$C,sys.rom;",
-	"OJK,           bank,Basic 128,SYS,TR-DOS,Basic 48;",
-	"-;",
-	"T0,Reset and apply settings;",
+	"R256,Save NVRAM settings;",
+	"T0,Reset;",
 	"V,v",`BUILD_DATE
 };
 
-wire [27:0] CMOSCfg;
-
-// fix default values
-assign CMOSCfg[5:0]  = 0;
-assign CMOSCfg[7:6]  = status[7:6];
-assign CMOSCfg[8]    = ~status[8];
-assign CMOSCfg[10:9] = status[10:9] + 1'd1;
-assign CMOSCfg[13:11]= (status[13:11] < 2) ? status[13:11] + 3'd3 : status[13:11] - 3'd2;
-assign CMOSCfg[15:14]= status[15:14];
-assign CMOSCfg[18:16]= (status[18:16]) ? status[18:16] + 3'd2 : 3'd0;
-assign CMOSCfg[20:19]= status[20:19] + 2'd2;
-assign CMOSCfg[23:21]= status[23:21];
-assign CMOSCfg[24]   = 0;
-assign CMOSCfg[27:25]= status[27:25] + 1'd1;
+wire st_reset = status[0];
+wire [1:0] st_scanlines = status[2:1];
+wire st_60hz = ~status[4];
+wire st_vdac = ~status[5];
+wire st_out0 = ~status[6];
 
 
 ////////////////////   CLOCKS   ///////////////////
@@ -235,7 +218,9 @@ user_io #(.STRLEN($size(CONF_STR)>>3), .SD_IMAGES(2), .FEATURES(32'h0 | (BIG_OSD
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
 wire  [7:0] ioctl_dout;
+wire  [7:0] ioctl_din;
 wire        ioctl_download;
+wire        ioctl_upload;
 wire  [5:0] ioctl_index;
 wire  [1:0] ioctl_ext_index;
 
@@ -252,7 +237,9 @@ data_io data_io
 	.ioctl_wr(ioctl_wr),
 	.ioctl_addr(ioctl_addr),
 	.ioctl_dout(ioctl_dout),
+	.ioctl_din(ioctl_din),
 	.ioctl_download(ioctl_download),
+	.ioctl_upload(ioctl_upload),
 	.ioctl_index({ioctl_ext_index, ioctl_index})
 );
 
@@ -261,6 +248,7 @@ reg init_reset = 1;
 reg old_download;
 always @(posedge clk_sys) begin
 	old_download <= ioctl_download;
+	if(ioctl_download) init_reset <= 1'b1;
 	if(old_download & ~ioctl_download) init_reset <= 0;
 end
 
@@ -336,13 +324,15 @@ tsconf tsconf
 	.SOUND_L(SOUND_L),
 	.SOUND_R(SOUND_R),
 
-	.COLD_RESET(init_reset | status[0]),
+	.COLD_RESET(init_reset | st_reset),
 	.WARM_RESET(buttons[1]),
 	.RTC(rtc),
-	.OUT0(~status[30]),
 	.TAPE_IN(UART_RX),
 
-	.CMOSCfg(CMOSCfg),
+	.CFG_OUT0(st_out0),
+	.CFG_60HZ(st_60hz),
+	.CFG_SCANDOUBLER(1'b0),
+	.CFG_VDAC(st_vdac),
 
 	.PS2_KEY({key_strobe,key_pressed,key_extended,key_code}),
 	.PS2_MOUSE(ps2_mouse),
@@ -350,8 +340,10 @@ tsconf tsconf
 
 	.loader_act(ioctl_download),
 	.loader_addr(ioctl_addr[15:0]),
-	.loader_data(ioctl_dout),
-	.loader_wr(ioctl_wr && ioctl_download && !ioctl_index && !ioctl_addr[24:16])
+	.loader_do(ioctl_dout),
+	.loader_di(ioctl_din),
+	.loader_wr_rom(ioctl_wr && ioctl_download && !ioctl_index && !ioctl_addr[24:16]),
+	.loader_wr_cmos(ioctl_wr && ioctl_download && ioctl_index == 6'h3f)
 );
 
 
@@ -372,7 +364,7 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 	.SPI_DI      ( SPI_DI     ),
 
 	// scanlines (00-none 01-25% 10-50% 11-75%)
-	// .scanlines   ( status[2:1]  ),
+	.scanlines   ( st_scanlines  ),
 
 	// non-scandoubled pixel clock divider 0 - clk_sys/4, 1 - clk_sys/2
 	.ce_divider  ( 3'd2       ),
