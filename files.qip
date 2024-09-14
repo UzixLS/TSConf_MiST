@@ -15,6 +15,7 @@ set_global_assignment -name QIP_FILE rtl/sound/jt12/jt03.qip
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/turbosound.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/saa1099.sv
 set_global_assignment -name VERILOG_FILE rtl/sound/gs.v
+set_global_assignment -name VERILOG_FILE rtl/sound/gs_top.v
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/compressor.sv
 set_global_assignment -name VERILOG_FILE rtl/video/video_ts_render.v
 set_global_assignment -name VERILOG_FILE rtl/video/video_ts.v

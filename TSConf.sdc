@@ -43,5 +43,5 @@ set_multicycle_path -to {tsconf|CPU|*} -hold 1
 set_multicycle_path -to {tsconf|saa1099|*} -setup 2
 set_multicycle_path -to {tsconf|saa1099|*} -hold 1
 
-set_multicycle_path -to {tsconf|gs|*} -setup 2
-set_multicycle_path -to {tsconf|gs|*} -hold 1
+set_multicycle_path -to {tsconf|gs_top|gs|CPU|*} -setup 2
+set_multicycle_path -to {tsconf|gs_top|gs|CPU|*} -hold 1

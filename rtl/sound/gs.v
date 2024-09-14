@@ -6,6 +6,7 @@
    18.08.2018	Reworked first verilog version
    19.08.2018	Produce proper signed output
    20.08.2018	Use external SDR/DDR RAM for page 2 and up
+   21.05.2020	Use external SDR/DDR RAM for all ROM/RAM
 
    CPU: Z80 @ 28MHz
    ROM: 32K
@@ -68,31 +69,33 @@
 
 module gs
 (
-   input         RESET,
-   input         CLK,
-   input         CE,
+	input         RESET,
+	input         CLK,
+	input         CE,
 
-   input         A,
-   input   [7:0] DI,
-   output  [7:0] DO,
-   input         CS_n,
-   input         WR_n,
-   input         RD_n,
+	input         A,
+	input   [7:0] DI,
+	output  [7:0] DO,
+	input         CS_n, 
+	input         WR_n,
+	input         RD_n,
 
-   output [20:0] MEM_ADDR,
-   output  [7:0] MEM_DI,
-   input   [7:0] MEM_DO,
-   output        MEM_RD,
-   output        MEM_WR,
-   input         MEM_WAIT,
-   output        MEM_ROM,
+	output [20:0] MEM_ADDR,
+	output  [7:0] MEM_DI,
+	input   [7:0] MEM_DO,
+	output        MEM_RD,
+	output        MEM_WR,
+	input         MEM_WAIT,
+	output        MEM_ROM,
 
-   output [14:0] OUTL,
-   output [14:0] OUTR
+	output [14:0] OUTL,
+	output [14:0] OUTR
 );
 
+parameter INT_DIV = 291;
+
 // port #xxBB : #xxB3
-assign DO = A ? {bit7, 6'b111111, bit0} : port_03;
+assign DO = A ? {flag_data, 6'b111111, flag_cmd} : port_03;
 
 // CPU
 reg         int_n;
@@ -104,7 +107,7 @@ wire        cpu_wr_n;
 wire [15:0] cpu_a_bus;
 wire  [7:0] cpu_do_bus;
 
-T80pa cpu
+T80pa CPU
 (
 	.RESET_n(~RESET),
 	.CLK(CLK),
@@ -124,9 +127,12 @@ T80pa cpu
 always @(posedge CLK) begin
 	reg [9:0] cnt;
 
-	if(CE) begin
+	if (RESET) begin
+		cnt <= 0;
+		int_n <= 1;
+	end else if(CE) begin
 		cnt <= cnt + 1'b1;
-		if (cnt == 746) begin // 37.48kHz
+		if (cnt == INT_DIV) begin // 37.48kHz
 			cnt <= 0;
 			int_n <= 0;
 		end
@@ -136,22 +142,22 @@ always @(posedge CLK) begin
 end
 
 
-reg bit7;
-reg bit0;
+reg flag_data;
+reg flag_cmd;
 always @(posedge CLK) begin
 	if (~cpu_iorq_n & cpu_m1_n) begin
 		case(cpu_a_bus[3:0])
-			'h2: bit7 <= 0;
-			'h3: bit7 <= 1;
-			'h5: bit0 <= 0;
-			'hA: bit7 <= ~port_00[0];
-			'hB: bit0 <=  port_09[5];
+			'h2: flag_data <= 0;
+			'h3: flag_data <= 1;
+			'h5: flag_cmd <= 0;
+			'hA: flag_data <= ~port_00[0];
+			'hB: flag_cmd <= port_09[5];
 		endcase
 	end
-	else if (~CS_n) begin
-		if (~A & ~RD_n) bit7 <= 0;
-		if (~A & ~WR_n) bit7 <= 1;
-		if ( A & ~WR_n) bit0 <= 1;
+	if (~CS_n) begin
+		if (~A & ~RD_n) flag_data <= 0;
+		if (~A & ~WR_n) flag_data <= 1;
+		if ( A & ~WR_n) flag_cmd <= 1;
 	end
 end
 
@@ -171,7 +177,7 @@ end
 
 reg [5:0] port_00;
 reg [7:0] port_03;
-reg signed [6:0] port_06 = 0, port_07 = 0, port_08 = 0, port_09 = 0;
+reg signed [6:0] port_06, port_07, port_08, port_09;
 reg signed [7:0] ch_a, ch_b, ch_c, ch_d;
 
 always @(posedge CLK) begin
@@ -206,7 +212,7 @@ wire [7:0] cpu_di_bus =
 	(~cpu_mreq_n && ~cpu_rd_n)                        ? MEM_DO  :
 	(~cpu_iorq_n && ~cpu_rd_n && cpu_a_bus[3:0] == 1) ? port_BB :
 	(~cpu_iorq_n && ~cpu_rd_n && cpu_a_bus[3:0] == 2) ? port_B3 :
-	(~cpu_iorq_n && ~cpu_rd_n && cpu_a_bus[3:0] == 4) ? {bit7, 6'b111111, bit0} :
+	(~cpu_iorq_n && ~cpu_rd_n && cpu_a_bus[3:0] == 4) ? {flag_data, 6'b111111, flag_cmd} :
 	8'hFF;
 
 

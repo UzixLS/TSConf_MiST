@@ -1,46 +1,71 @@
-// READ           25        26        27        21        22        23        24
-//                RAS                 CAS                           read
-// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
-// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
-//                        T0        T1        T2        T3        T4        T5        T6
-// 5.95ns                 ACT                 READ           DQDQDQDQD
-//                                                      tAC=6     tOH=3
+//                25        26        27        28        29        30        31        20        21        22        23        24        25
+// cpu_strobe ________________________________________________________________/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\_______________________________________________________________
+// cyc        ‾‾‾‾\_____________________________________________________________________________________________________________/‾‾‾‾‾‾‾‾‾\____
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+//                5.95ns
 //
-// WRITE          25        26        27        22        23        24
-//                RAS                 CASWEDQ
-// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
-// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
-//                        T0        T1        T2        T3        T4        T5
-// 5.95ns                 ACT                 WRITE
+// REFRESH        RASCAS
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
+//                        REFRSH
+//
+// READ+NOP       RAS                 CAS                           latch     set do
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
+//                        ACT                 READ           DQDQDQDQD
+//
+// WRITE+NOP      RAS                 CASWEDQ
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
+//                        ACT                 WRITE
+//
+// NOP+READ                                     RAS                           CAS                           latch     set do
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
+//                                                      ACT                           READ           DQDQDQDQD
+//
+// NOP+WRITE                                    RAS                           CASWEDQ
+// clk_sys    ____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾
+// clk_ram       ‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____/‾‾‾‾\____
+//                                                      ACT                           WRITE
 //
 
 module sdram
 (
-	// Memory port
-	input             clk,
-	input             cyc,
+    input             clk,
+    input             cyc,
 
-	input             curr_cpu,
-	input       [1:0] bsel,		// Active HI
-	input      [23:0] A,
-	input      [15:0] DI,
-	output reg [15:0] DO,
-	output reg [15:0] DO_cpu,
-	input             REQ,
-	input             RNW,
+    // Memory port 1
+    input             port1_curr_cpu,
+    input       [1:0] port1_bsel,
+    input      [23:0] port1_a,
+    input      [15:0] port1_di,
+    output reg [15:0] port1_do,
+    output reg [15:0] port1_do_cpu,
+    input             port1_req,
+    input             port1_rnw,
 
-	// SDRAM Pin
-	inout  reg [15:0] SDRAM_DQ,
-	output reg [12:0] SDRAM_A,
-	output reg  [1:0] SDRAM_BA,
-	output            SDRAM_DQML,
-	output            SDRAM_DQMH,
-	output            SDRAM_nCS,
-	output            SDRAM_nCAS,
-	output            SDRAM_nRAS,
-	output            SDRAM_nWE,
-	output            SDRAM_CKE,
-	output            SDRAM_CLK
+    // Memory port 2
+    input       [1:0] port2_bsel,
+    input      [23:0] port2_a,
+    input      [15:0] port2_di,
+    output reg [15:0] port2_do,
+    input             port2_req,
+    input             port2_rnw,
+    output reg        port2_ack = 0,
+
+    // SDRAM Pin
+    inout  reg [15:0] SDRAM_DQ,
+    output reg [12:0] SDRAM_A = 0,
+    output reg  [1:0] SDRAM_BA = 0,
+    output            SDRAM_DQML,
+    output            SDRAM_DQMH,
+    output            SDRAM_nCS,
+    output            SDRAM_nCAS,
+    output            SDRAM_nRAS,
+    output            SDRAM_nWE,
+    output            SDRAM_CKE,
+    output            SDRAM_CLK
 );
 
 reg [2:0] sdr_cmd;
@@ -48,88 +73,127 @@ reg [2:0] sdr_cmd;
 localparam SdrCmd_xx = 3'b111; // no operation
 localparam SdrCmd_ac = 3'b011; // activate
 localparam SdrCmd_rd = 3'b101; // read
-localparam SdrCmd_wr = 3'b100; // write		
+localparam SdrCmd_wr = 3'b100; // write
 localparam SdrCmd_pr = 3'b010; // precharge all
 localparam SdrCmd_re = 3'b001; // refresh
 localparam SdrCmd_ms = 3'b000; // mode regiser set
 
+reg  [5:0] state = 0;
+reg [15:0] data;
+reg  [8:0] col;
+reg [23:0] Ar1, Ar2;
+reg  [1:0] dqm1, dqm2;
+reg        rq1, rq2;
+reg        rd1, rd2 = 0;
+
 always @(posedge clk) begin
-	reg  [4:0] state;
-	reg        rd;
-	reg  [8:0] col;
-	reg  [1:0] dqm;
-	reg [15:0] data;
-	reg [23:0] Ar;
-	reg        rq;
+    sdr_cmd <= SdrCmd_xx;
+    data <= SDRAM_DQ;
+    SDRAM_DQ <= 16'bZ;
+    state <= state + 1'd1;
+    port2_ack <= 1'b0;
 
-	sdr_cmd <= SdrCmd_xx;
-	data <= SDRAM_DQ;
-	SDRAM_DQ <= 16'bZ;
-	state <= state + 1'd1;
+    case (state)
 
-	case (state)
+    // Init
+    0:	begin
+        sdr_cmd <= SdrCmd_pr;		// PRECHARGE
+    end
 
-	// Init
-	0:	begin
-			sdr_cmd <= SdrCmd_pr;		// PRECHARGE
-			SDRAM_A <= 0;
-			SDRAM_BA <= 0;
-		end
+    // REFRESH
+    3,10: begin
+        sdr_cmd <= SdrCmd_re;
+    end
 
-	// REFRESH
-	3,10: begin
-			sdr_cmd <= SdrCmd_re;
-		end
+    // LOAD MODE REGISTER
+    17: begin
+        sdr_cmd <= SdrCmd_ms;
+        SDRAM_A <= {3'b000, 1'b1, 2'b00, 3'b010, 1'b0, 3'b000};
+    end
 
-	// LOAD MODE REGISTER
-	17: begin
-			sdr_cmd <= SdrCmd_ms;
-			SDRAM_A <= {3'b000, 1'b1, 2'b00, 3'b010, 1'b0, 3'b000};
-		end
+    // Idle
+    24: begin
+        state <= state;
+        Ar1 <= port1_a;
+        Ar2 <= port2_a;
+        dqm1 <= port1_rnw ? 2'b00 : ~port1_bsel;
+        dqm2 <= port2_rnw ? 2'b00 : ~port2_bsel;
+        rq1 <= port1_req;
+        rd1 <= port1_req & port1_rnw;
+        rq2 <= port2_req;
+        rd2 <= port2_req & port2_rnw;
+        if (cyc)
+            state <= state + 1'd1;
+    end
 
-	// Idle
-	24: begin
-			if (rd) begin
-				DO <= data;
-				if (curr_cpu) DO_cpu <= data;
-			end
+    // Start - activate (port1) or refresh
+    25: begin
+        if (rq1) begin
+            {SDRAM_BA,SDRAM_A,col} <= Ar1;
+            sdr_cmd <= SdrCmd_ac;
+        end
+        else if (rq2) begin
+            // start at state 28
+        end
+        else begin
+            sdr_cmd <= SdrCmd_re;
+            state <= 19;
+        end
+    end
 
-			state <= state;
-			Ar <= A;
-			dqm <= RNW ? 2'b00 : ~bsel;
-			rd <= 0;
+    // Single read/write (port1) - with auto precharge
+    27: begin
+        SDRAM_A <= {dqm1, 2'b1x, col};
+        if (rq1) begin
+            if (rd1) begin
+                sdr_cmd <= SdrCmd_rd;
+            end
+            else begin
+                sdr_cmd <= SdrCmd_wr;
+                SDRAM_DQ <= port1_di;
+            end
+        end
+    end
 
-			if(cyc) begin
-				rq <= REQ;
-				rd <= REQ & RNW;
-				state <= state + 1'd1;
-			end
-		end
+    // Start - activate (port2) or refresh
+    28: begin
+        if (rq2) begin
+            {SDRAM_BA,SDRAM_A,col} <= Ar2;
+            sdr_cmd <= SdrCmd_ac;
+        end
+    end
 
-	// Start
-	25: begin
-			if (rq) begin
-				{SDRAM_A,SDRAM_BA,col} <= Ar;
-				sdr_cmd <= SdrCmd_ac;
-			end else begin
-				sdr_cmd <= SdrCmd_re;
-				state <= 19;
-			end
-		end
+    // Latch read (port 1) and Single read/write (port2) - with auto precharge
+    31: begin
+        if (rd1) begin
+            port1_do <= data;
+            if (port1_curr_cpu) port1_do_cpu <= data;
+        end
 
-	// Single read/write - with auto precharge
-	27: begin
-			SDRAM_A <= {dqm, 2'b10, col};
-			state <= 21;
-			if (rd) sdr_cmd <= SdrCmd_rd;
-			else begin
-				sdr_cmd <= SdrCmd_wr;
-				SDRAM_DQ <= DI;
-				state <= 22;
-			end
-		end
+        SDRAM_A <= {dqm2, 2'b1x, col};
+        if (rq2) begin
+            if (rd2) begin
+                sdr_cmd <= SdrCmd_rd;
+            end
+            else begin
+                sdr_cmd <= SdrCmd_wr;
+                SDRAM_DQ <= port2_di;
+                port2_ack <= 1'b1;
+            end
+        end
 
-	endcase
+        state <= 20;
+    end
+
+    // Latch read (port 2)
+    23: begin
+        if (rd2) begin
+            port2_do <= data;
+            port2_ack <= 1'b1;
+        end
+    end
+
+    endcase
 end
 
 assign SDRAM_CKE  = 1;
@@ -142,27 +206,27 @@ assign SDRAM_DQMH = SDRAM_A[12];
 
 altddio_out
 #(
-	.extend_oe_disable("OFF"),
-	.intended_device_family("Cyclone III"),
-	.invert_output("OFF"),
-	.lpm_hint("UNUSED"),
-	.lpm_type("altddio_out"),
-	.oe_reg("UNREGISTERED"),
-	.power_up_high("OFF"),
-	.width(1)
+    .extend_oe_disable("OFF"),
+    .intended_device_family("Cyclone III"),
+    .invert_output("OFF"),
+    .lpm_hint("UNUSED"),
+    .lpm_type("altddio_out"),
+    .oe_reg("UNREGISTERED"),
+    .power_up_high("OFF"),
+    .width(1)
 )
 sdramclk_ddr
 (
-	.datain_h(1'b0),
-	.datain_l(1'b1),
-	.outclock(clk),
-	.dataout(SDRAM_CLK),
-	.aclr(1'b0),
-	.aset(1'b0),
-	.oe(1'b1),
-	.outclocken(1'b1),
-	.sclr(1'b0),
-	.sset(1'b0)
+    .datain_h(1'b0),
+    .datain_l(1'b1),
+    .outclock(clk),
+    .dataout(SDRAM_CLK),
+    .aclr(1'b0),
+    .aset(1'b0),
+    .oe(1'b1),
+    .outclocken(1'b1),
+    .sclr(1'b0),
+    .sset(1'b0)
 );
 
 endmodule

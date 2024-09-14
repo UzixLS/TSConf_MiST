@@ -342,8 +342,10 @@ tsconf tsconf
 	.loader_addr(ioctl_addr[15:0]),
 	.loader_do(ioctl_dout),
 	.loader_di(ioctl_din),
-	.loader_wr_rom(ioctl_wr && ioctl_download && !ioctl_index && !ioctl_addr[24:16]),
-	.loader_wr_cmos(ioctl_wr && ioctl_download && ioctl_index == 6'h3f)
+	.loader_wr(ioctl_wr),
+	.loader_cs_rom_main(ioctl_index == 6'h0),
+	.loader_cs_rom_gs(ioctl_index == 6'h1),
+	.loader_cs_cmos(ioctl_index == 6'h3f)
 );
 
 

@@ -61,8 +61,10 @@ module tsconf
   input  [15:0] loader_addr,
   input   [7:0] loader_do,
   output  [7:0] loader_di,
-  input         loader_wr_rom,
-  input         loader_wr_cmos
+  input         loader_wr,
+  input         loader_cs_rom_main,
+  input         loader_cs_rom_gs,
+  input         loader_cs_cmos
 );
 
   wire f0, f1, h0, h1, c0, c1, c2, c3;
@@ -159,7 +161,7 @@ module tsconf
   wire vdos_on, vdos_off;
   wire dos_on, dos_off;
 
-  wire [21:0] daddr;
+  wire [22:0] daddr;
   wire dreq;
   wire drnw;
   wire [15:0] dram_rd_r;
@@ -440,14 +442,21 @@ module tsconf
   (
     .clk(clk),
     .cyc(ce&c3),
-    .curr_cpu(curr_cpu),
-    .bsel(dbsel),
-    .A(daddr),
-    .DI(dram_wrdata),
-    .DO(dram_do),
-    .DO_cpu(dram_docpu),
-    .REQ(dreq),
-    .RNW(drnw),
+    .port1_curr_cpu(curr_cpu),
+    .port1_bsel(dbsel),
+    .port1_a(daddr),
+    .port1_di(dram_wrdata),
+    .port1_do(dram_do),
+    .port1_do_cpu(dram_docpu),
+    .port1_req(dreq),
+    .port1_rnw(drnw),
+    .port2_bsel(gs_dram_bsel),
+    .port2_a(gs_dram_addr),
+    .port2_di(gs_dram_di),
+    .port2_do(gs_dram_do),
+    .port2_req(gs_dram_req),
+    .port2_rnw(gs_dram_rnw),
+    .port2_ack(gs_dram_ack),
     .SDRAM_DQ(SDRAM_DQ),
     .SDRAM_A(SDRAM_A),
     .SDRAM_BA(SDRAM_BA),
@@ -505,7 +514,9 @@ module tsconf
     .loader_clk(clk),
     .loader_addr(loader_addr),
     .loader_data(loader_do),
-    .loader_wr(loader_wr_rom)
+    .loader_wr(loader_wr),
+    .loader_cs_rom_main(loader_cs_rom_main),
+    .loader_cs_rom_gs(loader_cs_rom_gs)
   );
 
   video_top video_top
@@ -952,7 +963,7 @@ module tsconf
     .A(wait_addr),
     .DI(d),
     .DO(wait_read),
-    .loader_WR(loader_wr_cmos),
+    .loader_WR(loader_wr && loader_cs_cmos),
     .loader_A(loader_addr[7:0]),
     .loader_DI(loader_do),
     .loader_DO(loader_di)
@@ -1012,23 +1023,23 @@ module tsconf
 
 
   // General Sound
-  wire [20:0] gs_mem_addr;
-  wire [7:0]  gs_mem_di;
-  wire [7:0]  gs_mem_do;
-  wire        gs_mem_rd;
-  wire        gs_mem_wr;
-  wire        gs_mem_wait;
+  wire [23:0] gs_dram_addr;
+  wire  [1:0] gs_dram_bsel;
+  wire [15:0] gs_dram_di;
+  wire [15:0] gs_dram_do;
+  wire        gs_dram_req;
+  wire        gs_dram_rnw;
+  wire        gs_dram_ack;
 
   wire [14:0] gs_l;
   wire [14:0] gs_r;
   wire [7:0]  gs_do_bus;
   wire        gs_sel = ~iorq_n & m1_n & (a[7:4] == 'hB && a[2:0] == 'h3);
 
-  gs gs
+  gs_top gs_top
   (
-    .RESET(rst | 1'b1),
+    .RESET(rst),
     .CLK(clk),
-    .CE(ce),
 
     .A(a[3]),
     .DI(d),
@@ -1037,15 +1048,18 @@ module tsconf
     .WR_n(wr_n),
     .RD_n(rd_n),
 
-    .MEM_ADDR(gs_mem_addr),
-    .MEM_DI(gs_mem_di),
-    .MEM_DO(gs_mem_do),
-    .MEM_RD(gs_mem_rd),
-    .MEM_WR(gs_mem_wr),
-    .MEM_WAIT(gs_mem_wait),
+    .DRAM_ADDR(gs_dram_addr),
+    .DRAM_BSEL(gs_dram_bsel),
+    .DRAM_DI(gs_dram_di),
+    .DRAM_DO(gs_dram_do),
+    .DRAM_REQ(gs_dram_req),
+    .DRAM_RNW(gs_dram_rnw),
+    .DRAM_ACK(gs_dram_ack),
 
     .OUTL(gs_l),
-    .OUTR(gs_r)
+    .OUTR(gs_r),
+
+    .ROM_INITING(loader_act && loader_cs_rom_gs)
   );
 
 

@@ -58,7 +58,7 @@ module arbiter
   input  wire        cyc,
 
   // dram.v interface
-  output wire [21:0] dram_addr,       // address for dram access
+  output wire [22:0] dram_addr,       // address for dram access
   output wire        dram_req,        // dram request
   output wire        dram_rnw,        // Read-NotWrite
   output wire [ 1:0] dram_bsel,       // byte select: bsel[1] for wrdata[15:8], bsel[0] for wrdata[7:0]
@@ -108,7 +108,9 @@ module arbiter
   input wire         loader_clk,
   input wire [15:0]  loader_addr,
   input wire  [7:0]  loader_data,
-  input wire         loader_wr
+  input wire         loader_wr,
+  input wire         loader_cs_rom_main,
+  input wire         loader_cs_rom_gs
 );
 
   localparam CYCLES    = 6;
@@ -182,10 +184,12 @@ module arbiter
 
   reg loader_wr0;
   reg [7:0] loader_data0;
+  reg [1:0] loader_hiaddr;
   always @(posedge loader_clk) begin
-    if (loader_wr) begin
+    if (loader_wr && (loader_cs_rom_main || loader_cs_rom_gs)) begin
       loader_wr0 <= 1'd1;
       loader_data0 <= loader_data;
+      loader_hiaddr <= { loader_cs_rom_gs, loader_cs_rom_main };
     end
     else if (cyc) begin
       loader_wr0 <= 1'd0;
@@ -230,12 +234,12 @@ module arbiter
   assign dram_bsel[1:0] = next_loader? {loader_addr[0], ~loader_addr[0]} : next_dma ? 2'b11 : {cpu_wrbsel, ~cpu_wrbsel};
   assign dram_req = |next_cycle;
   assign dram_rnw = next_loader? 1'b0 : next_cpu ? cpu_rnw : (next_dma ? dma_rnw : 1'b1);
-  assign dram_addr =  {22{next_loader}} & { 1'b1, 6'b000000, loader_addr[15:1] }
-              | {22{next_cpu}} & { cpu_csrom, {6{~cpu_csrom}} & cpu_addr[20:15], cpu_addr[14:0] }
-              | {22{next_vid}} & { 1'b0, video_addr }
-              | {22{next_ts}}  & { 1'b0, ts_addr }
-              | {22{next_tm}}  & { 1'b0, tm_addr }
-              | {22{next_dma}} & { 1'b0, dma_addr };
+  assign dram_addr =  {23{next_loader}} & { loader_hiaddr, 6'b000000, loader_addr[15:1] }
+                    | {23{next_cpu}}    & { 1'b0, cpu_csrom, {6{~cpu_csrom}} & cpu_addr[20:15], cpu_addr[14:0] }
+                    | {23{next_vid}}    & { 2'b0, video_addr }
+                    | {23{next_ts}}     & { 2'b0, ts_addr }
+                    | {23{next_tm}}     & { 2'b0, tm_addr }
+                    | {23{next_dma}}    & { 2'b0, dma_addr };
 
   reg cpu_rnw_r;
   always @(posedge clk) if (c3)
