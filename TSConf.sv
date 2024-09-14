@@ -403,14 +403,14 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 dac #(.C_bits(16)) dac_l (
 	.clk_i(clk_sys),
 	.res_n_i(~init_reset),
-	.dac_i(SOUND_L),
+	.dac_i({~SOUND_L[15], SOUND_L[14:0]}),
 	.dac_o(AUDIO_L)
 );
 
 dac #(.C_bits(16)) dac_r (
 	.clk_i(clk_sys),
 	.res_n_i(~init_reset),
-	.dac_i(SOUND_R),
+	.dac_i({~SOUND_R[15], SOUND_R[14:0]}),
 	.dac_o(AUDIO_R)
 );
 
