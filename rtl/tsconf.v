@@ -51,11 +51,14 @@ module tsconf
   input         CFG_60HZ,
   input         CFG_SCANDOUBLER,
   input         CFG_VDAC,
+  input   [2:1] CFG_JOYSTICK1,
+  input   [2:1] CFG_JOYSTICK2,
 
   // User input
   input  [10:0] PS2_KEY,
   input  [24:0] PS2_MOUSE,
-  input   [7:0] JOYSTICK,
+  input   [7:0] JOYSTICK1,
+  input   [7:0] JOYSTICK2,
 
   input         loader_act,
   input  [15:0] loader_addr,
@@ -765,7 +768,7 @@ module tsconf
     .dmawpdev(dmawpdev),
     .keys_in(kbd_port_data),
     .mus_in(mus_port_data),
-    .kj_in(JOYSTICK),
+    .kj_in((!CFG_JOYSTICK1? JOYSTICK1 : 0) | (!CFG_JOYSTICK2? JOYSTICK2 : 0)),
     .tape_read(TAPE_IN),
     .beeper_wr(beeper_wr),
     .covox_wr(covox_wr),
@@ -926,9 +929,13 @@ module tsconf
     .reset(COLD_RESET | WARM_RESET),
     .a(a[15:8]),
     .keyb(kbd_port_data),
-    .KEY_RESET(key_reset),
+    .key_reset(key_reset),
     .scancode(key_scancode),
-    .ps2_key(PS2_KEY)
+    .ps2_key(PS2_KEY),
+    .cfg_joystick1(CFG_JOYSTICK1),
+    .cfg_joystick2(CFG_JOYSTICK2),
+    .joystick1(JOYSTICK1),
+    .joystick2(JOYSTICK2)
   );
 
 

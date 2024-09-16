@@ -69,6 +69,8 @@ assign UART_TX = 1'b1;
 `include "build_id.v"
 localparam CONF_STR = {
 	"TSConf;;",
+	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
+	"O9A,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor;",
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O4,Vsync,49 Hz,60 Hz;",
 	"O5,VDAC1,ON,OFF;",
@@ -80,6 +82,8 @@ localparam CONF_STR = {
 };
 
 wire st_reset = status[0];
+wire [1:0] st_joystick1 = status[8:7];
+wire [1:0] st_joystick2 = status[10:9];
 wire [1:0] st_scanlines = status[2:1];
 wire st_60hz = ~status[4];
 wire st_vdac = ~status[5];
@@ -121,8 +125,8 @@ end
 
 
 //////////////////   MIST ARM I/O   ///////////////////
-wire  [7:0] joystick_0;
-wire  [7:0] joystick_1;
+wire  [31:0] joystick_0;
+wire  [31:0] joystick_1;
 
 wire  [1:0] buttons;
 wire  [1:0] switches;
@@ -333,10 +337,13 @@ tsconf tsconf
 	.CFG_60HZ(st_60hz),
 	.CFG_SCANDOUBLER(1'b0),
 	.CFG_VDAC(st_vdac),
+	.CFG_JOYSTICK1(st_joystick1),
+	.CFG_JOYSTICK2(st_joystick2),
 
 	.PS2_KEY({key_strobe,key_pressed,key_extended,key_code}),
 	.PS2_MOUSE(ps2_mouse),
-	.JOYSTICK(joystick_0 | joystick_1),
+	.JOYSTICK1({joystick_0[9:8], joystick_0[5:0]}),
+	.JOYSTICK2({joystick_1[9:8], joystick_1[5:0]}),
 
 	.loader_act(ioctl_download),
 	.loader_addr(ioctl_addr[15:0]),
