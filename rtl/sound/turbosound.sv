@@ -164,23 +164,17 @@ jt03 ym2203_1
 
 assign DO = ay_select ? DO_1 : DO_0;
 
-reg  [8:0] sum_ch_a,sum_ch_b,sum_ch_c;
-reg  [7:0] psg_a,psg_b,psg_c;
+reg  [8:0] psg_a,psg_b,psg_c;
 reg [11:0] psg_l,psg_r,opn_s;
 reg [11:0] ch_l, ch_r;
 
 always @(posedge CLK) begin
+	psg_a <= { 1'b0, psg_ch_a_1 } + { 1'b0, psg_ch_a_0 };
+	psg_b <= { 1'b0, psg_ch_b_1 } + { 1'b0, psg_ch_b_0 };
+	psg_c <= { 1'b0, psg_ch_c_1 } + { 1'b0, psg_ch_c_0 };
 
-	sum_ch_a <= { 1'b0, psg_ch_a_1 } + { 1'b0, psg_ch_a_0 };
-	sum_ch_b <= { 1'b0, psg_ch_b_1 } + { 1'b0, psg_ch_b_0 };
-	sum_ch_c <= { 1'b0, psg_ch_c_1 } + { 1'b0, psg_ch_c_0 };
-
-	psg_a <= sum_ch_a[8] ? 8'hFF : sum_ch_a[7:0];
-	psg_b <= sum_ch_b[8] ? 8'hFF : sum_ch_b[7:0];
-	psg_c <= sum_ch_c[8] ? 8'hFF : sum_ch_c[7:0];
-
-	psg_l <= {3'b000, psg_a, 1'd0} + {4'b0000, psg_b};
-	psg_r <= {3'b000, psg_c, 1'd0} + {4'b0000, psg_b};
+	psg_l <= { 2'b00, psg_a, 1'd0 } + { 3'b000, psg_b };
+	psg_r <= { 2'b00, psg_c, 1'd0 } + { 3'b000, psg_b };
 	opn_s <= {{2{opn_0[15]}}, opn_0[15:6]} + {{2{opn_1[15]}}, opn_1[15:6]};
 
 	ch_l <= fm_ena ? $signed(opn_s) + $signed(psg_l) : $signed(psg_l);
