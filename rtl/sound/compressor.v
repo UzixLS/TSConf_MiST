@@ -20,9 +20,9 @@
 
 module compressor
 (
-   input         clk,
-   input  [11:0] in1, in2,
-   output [15:0] out1, out2
+   input             clk,
+   input      [11:0] in1, in2,
+   output reg [15:0] out1, out2
 );
 
 reg [10:0] a1;

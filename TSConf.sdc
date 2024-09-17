@@ -29,9 +29,12 @@ set_output_delay -clock [get_clocks {pll|altpll_component|auto_generated|pll1|cl
 set_multicycle_path -to [get_ports {VGA_*}] -setup 5
 set_multicycle_path -to [get_ports {VGA_*}] -hold 4
 
-set_false_path -to {dac:*}
+# Some relaxed constrain for DAC, which is feed by 28 MHz derived clock
+set_multicycle_path -to {dac|*} -setup 3
+set_multicycle_path -to {dac|*} -hold 2
 set_false_path -to [get_ports {AUDIO_L}]
 set_false_path -to [get_ports {AUDIO_R}]
+
 set_false_path -to [get_ports {LED}]
 set_false_path -from [get_ports {UART_RX}]
 

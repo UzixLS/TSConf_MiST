@@ -407,19 +407,25 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 
 
 //////////////////   SOUND   ///////////////////
-dac #(.C_bits(16)) dac_l (
-	.clk_i(clk_sys),
-	.res_n_i(~init_reset),
-	.dac_i({~SOUND_L[15], SOUND_L[14:0]}),
-	.dac_o(AUDIO_L)
+wire dac_l, dac_r;
+hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
+	.clk(clk_sys & ce_28m),
+	.reset_n(~init_reset),
+	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
+	.q_l(dac_l),
+	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
+	.q_r(dac_r)
 );
 
-dac #(.C_bits(16)) dac_r (
-	.clk_i(clk_sys),
-	.res_n_i(~init_reset),
-	.dac_i({~SOUND_R[15], SOUND_R[14:0]}),
-	.dac_o(AUDIO_R)
-);
+reg [23:0] mute_cnt = 0;
+always @(posedge clk_sys) begin
+	if (init_reset)
+		mute_cnt <= 1;
+	else if (mute_cnt && ce_28m)
+		mute_cnt <= mute_cnt + 1'b1;
+end
+assign AUDIO_L = mute_cnt? 1'bZ : dac_l;
+assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
 
 
 endmodule
