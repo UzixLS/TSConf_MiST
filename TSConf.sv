@@ -62,8 +62,7 @@ localparam VGA_BITS = 6;
 localparam bit BIG_OSD = 1;
 
 
-assign LED = ~ioctl_download & ~ioctl_upload & UART_TX & UART_RX;
-assign UART_TX = 1'b1;
+assign LED = ~ioctl_download & ~ioctl_upload & UART_RX;
 
 
 `include "build_id.v"
@@ -296,6 +295,7 @@ wire [7:0] R,G,B;
 wire VS, HS;
 wire [15:0] SOUND_L;
 wire [15:0] SOUND_R;
+wire tape_out, midi_out;
 
 tsconf tsconf
 (
@@ -332,6 +332,8 @@ tsconf tsconf
 	.WARM_RESET(buttons[1]),
 	.RTC(rtc),
 	.TAPE_IN(UART_RX),
+	.TAPE_OUT(tape_out),
+	.MIDI_OUT(midi_out),
 
 	.CFG_OUT0(st_out0),
 	.CFG_60HZ(st_60hz),
@@ -356,14 +358,32 @@ tsconf tsconf
 );
 
 
+//////////////////  UART_TX  //////////////////
+reg uart_tx = 1'b1;
+reg tape_out_old = 1'b0;
+reg midi_out_old = 1'b0;
+
+always @(posedge clk_sys) begin
+	if (tape_out_old != tape_out) begin
+		tape_out_old <= tape_out;
+		uart_tx <= tape_out;
+	end
+	if (midi_out_old != midi_out) begin
+		midi_out_old <= midi_out;
+		uart_tx <= midi_out;
+	end
+end
+
+assign UART_TX = uart_tx;
+
+
+//////////////////   VIDEO   ///////////////////
 reg VSync, HSync;
 always @(posedge clk_sys) begin
 	HSync <= HS;
 	if(~HSync & HS) VSync <= VS;
 end
 
-
-//////////////////   VIDEO   ///////////////////
 mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .BIG_OSD(BIG_OSD)) mist_video (
 	.clk_sys     ( clk_sys    ),
 
