@@ -60,14 +60,14 @@ module video_ports
   output reg [7:0] sgpage   = 0
 );
 
-  reg [7:0] vpage_r    = 0;
+  reg [7:0] vpage_r    = 8'h05;
   reg [7:0] vconf_r    = 0;
   reg [7:0] t0gpage_r  = 0;
   reg [7:0] t1gpage_r  = 0;
   reg [8:0] gx_offs_r  = 0;
   reg [8:0] t0x_offs_r = 0;
   reg [8:0] t1x_offs_r = 0;
-  reg [7:0] palsel_r   = 0;
+  reg [7:0] palsel_r   = 8'h0F;
   reg [3:0] vint_inc   = 0;
 
   wire [8:0] vint_beg_inc = vint_beg + vint_inc;

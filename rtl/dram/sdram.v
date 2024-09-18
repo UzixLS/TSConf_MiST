@@ -89,7 +89,7 @@ reg        rd1, rd2 = 0;
 always @(posedge clk) begin
     sdr_cmd <= SdrCmd_xx;
     data <= SDRAM_DQ;
-    SDRAM_DQ <= 16'bZ;
+    SDRAM_DQ <= {16{1'bZ}};
     state <= state + 1'd1;
     port2_ack <= 1'b0;
 
