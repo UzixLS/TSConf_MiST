@@ -47,6 +47,8 @@ module tsconf
   input         TAPE_IN,
   output        TAPE_OUT,
   output        MIDI_OUT,
+  input         UART_RX,
+  output        UART_TX,
 
   // Configuration bits
   input         CFG_OUT0,
@@ -979,6 +981,26 @@ module tsconf
   );
 
 
+  // ZiFi
+  wire [7:0] zifi_do;
+  wire zifi_dataout;
+
+  zifi zifi
+  (
+    .clk(fclk),
+    .rst(rst),
+    .din(d),
+    .dout(zifi_do),
+    .dataout(zifi_dataout),
+    .a(a),
+    .iord(iord),
+    .iord_s(iord_s),
+    .iowr_s(iowr_s),
+    .rx(UART_RX),
+    .tx(UART_TX)
+  );
+
+
   // Soundrive
   wire [7:0] covox_a;
   wire [7:0] covox_b;
@@ -1126,6 +1148,7 @@ module tsconf
       (~mreq_n && ~rd_n)                  ? dout_ram      : // SDRAM
       (gs_sel && ~rd_n)                   ? gs_do_bus     : // General Sound
       (ts_enable && ~rd_n)                ? ts_do         : // TurboSound
+      (zifi_dataout && ~rd_n)             ? zifi_do       : // ZiFi
       (ena_ports)                         ? dout_ports    :
       (intack)                            ? im2vect       :
                                             8'b11111111;

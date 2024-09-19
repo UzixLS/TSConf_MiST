@@ -295,7 +295,7 @@ wire [7:0] R,G,B;
 wire VS, HS;
 wire [15:0] SOUND_L;
 wire [15:0] SOUND_R;
-wire tape_out, midi_out;
+wire tape_out, midi_out, uart_out;
 
 tsconf tsconf
 (
@@ -334,6 +334,8 @@ tsconf tsconf
 	.TAPE_IN(UART_RX),
 	.TAPE_OUT(tape_out),
 	.MIDI_OUT(midi_out),
+	.UART_RX(UART_RX),
+	.UART_TX(uart_out),
 
 	.CFG_OUT0(st_out0),
 	.CFG_60HZ(st_60hz),
@@ -362,6 +364,7 @@ tsconf tsconf
 reg uart_tx = 1'b1;
 reg tape_out_old = 1'b0;
 reg midi_out_old = 1'b0;
+reg uart_out_old = 1'b0;
 
 always @(posedge clk_sys) begin
 	if (tape_out_old != tape_out) begin
@@ -371,6 +374,10 @@ always @(posedge clk_sys) begin
 	if (midi_out_old != midi_out) begin
 		midi_out_old <= midi_out;
 		uart_tx <= midi_out;
+	end
+	if (uart_out_old != uart_out) begin
+		uart_out_old <= uart_out;
+		uart_tx <= uart_out;
 	end
 end
 

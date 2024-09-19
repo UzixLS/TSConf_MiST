@@ -36,6 +36,7 @@ set_false_path -to [get_ports {AUDIO_L}]
 set_false_path -to [get_ports {AUDIO_R}]
 
 set_false_path -to [get_ports {LED}]
+set_false_path -to [get_ports {UART_TX}]
 set_false_path -from [get_ports {UART_RX}]
 
 set_multicycle_path -from {tsconf|CPU|*} -setup 2

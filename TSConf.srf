@@ -1,6 +1,6 @@
 { "" "" "" "Verilog HDL or VHDL warning at user_io.v(271): object \"kbd_out_data_available\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Verilog HDL or VHDL warning at tsconf.v(111): object \"cfg_tape_sound\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
-{ "" "" "" "Verilog HDL or VHDL warning at tsconf.v(132): object \"zclk\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at tsconf.v(113): object \"cfg_tape_sound\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL or VHDL warning at tsconf.v(134): object \"zclk\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "Verilog HDL or VHDL warning at video_out.v(83): object \"red0\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "Verilog HDL or VHDL warning at video_out.v(84): object \"grn0\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "Verilog HDL or VHDL warning at video_out.v(85): object \"blu0\" assigned a value but never read" {  } {  } 0 10036 "" 0 0 "Quartus II" 0 -1 0 ""}
@@ -22,3 +22,6 @@
 { "" "" "" "Verilog HDL information at jt12_reg_ch.v(104): always construct contains both blocking and non-blocking assignments" {  } {  } 0 10268 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "PCI-clamp diode is not supported in this mode. The following 1 pins must meet the Altera requirements for 3.3V, 3.0V, and 2.5V interfaces if they are connected to devices other than the supported configuration devices. In these cases, Altera recommends termination method as specified in the Application Note 447." {  } {  } 0 169203 "" 0 0 "Quartus II" 0 -1 0 ""}
 { "" "" "" "26 pins must meet Altera requirements for 3.3-, 3.0-, and 2.5-V interfaces. For more information, refer to AN 447: Interfacing Cyclone III Devices with 3.3/3.0/2.5-V LVTTL/LVCMOS I/O Systems." {  } {  } 0 169177 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Casex/Casez warning at zifi.v(112): casex/casez item expression overlaps with a previous casex/casez item expression" {  } {  } 0 10935 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Casex/Casez warning at zifi.v(143): casex/casez item expression overlaps with a previous casex/casez item expression" {  } {  } 0 10935 "" 0 0 "Quartus II" 0 -1 0 ""}
+{ "" "" "" "Verilog HDL Expression warning at zifi.v(199): truncated literal to match 8 bits" {  } {  } 0 10229 "" 0 0 "Quartus II" 0 -1 0 ""}
