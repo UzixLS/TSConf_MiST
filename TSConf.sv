@@ -70,6 +70,7 @@ localparam CONF_STR = {
 	"TSConf;;",
 	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
 	"O9A,Joystick 2,Kempston,Sinclair 1,Sinclair 2,Cursor;",
+	"O3,Swap mouse buttons,OFF,ON;",
 	"O12,Scandoubler Fx,None,CRT 25%,CRT 50%,CRT 75%;",
 	"O4,Vsync,49 Hz,60 Hz;",
 	"O5,VDAC1,ON,OFF;",
@@ -83,6 +84,7 @@ localparam CONF_STR = {
 wire st_reset = status[0];
 wire [1:0] st_joystick1 = status[8:7];
 wire [1:0] st_joystick2 = status[10:9];
+wire st_mouseswap = status[3];
 wire [1:0] st_scanlines = status[2:1];
 wire st_60hz = ~status[4];
 wire st_vdac = ~status[5];
@@ -168,7 +170,9 @@ wire  [8:0] mouse_y;
 wire  [7:0] mouse_flags;
 wire        mouse_strobe;
 
-wire [24:0] ps2_mouse = { mouse_strobe_level, mouse_y[7:0], mouse_x[7:0], mouse_flags };
+wire        mouse_b0 = st_mouseswap? mouse_flags[0] : mouse_flags[1];
+wire        mouse_b1 = st_mouseswap? mouse_flags[1] : mouse_flags[0];
+wire [24:0] ps2_mouse = { mouse_strobe_level, mouse_y[7:0], mouse_x[7:0], mouse_flags[7:2], mouse_b1, mouse_b0 };
 reg         mouse_strobe_level;
 always @(posedge clk_sys) if (mouse_strobe) mouse_strobe_level <= ~mouse_strobe_level;
 
