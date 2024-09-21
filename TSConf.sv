@@ -59,7 +59,7 @@ module TSConf_top
 );
 
 localparam VGA_BITS = 6;
-localparam bit BIG_OSD = 1;
+localparam bit BIG_OSD = 0;
 
 
 assign LED = ~ioctl_download & ~ioctl_upload & UART_RX;
@@ -75,7 +75,6 @@ localparam CONF_STR = {
 	"O4,Vsync,49 Hz,60 Hz;",
 	"O5,VDAC1,ON,OFF;",
 	"O6,CPU Type,CMOS,NMOS;",
-	"-;",
 	"R256,Save NVRAM settings;",
 	"T0,Reset;",
 	"V,v",`BUILD_DATE
