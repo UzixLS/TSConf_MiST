@@ -1,8 +1,8 @@
 //============================================================================
-//  TSConf for MiSTer
-// 
-//  Port to MiSTer
-//  Copyright (C) 2017-2019 Sorgelig
+//  TSConf for MiST
+//
+//  Port to MiST
+//  Copyright (C) 2024 Eugene Lozovoy
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free

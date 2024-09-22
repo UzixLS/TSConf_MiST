@@ -1,6 +1,6 @@
 # TSConf for MiST FPGA computer
 
-This is the port of TSConf (advanced ZX Spectrum-compatible platform) to [MiST](https://github.com/mist-devel/mist-board).
+This is the port of TSConf (advanced ZX Spectrum-compatible platform) to [MiST](https://github.com/mist-devel/mist-board) and [MiST.1010](https://github.com/UzixLS/mist1010-board).
 
 ## Features of this port
 - VDAC 1
