@@ -22,6 +22,9 @@
 module TSConf_top
 (
 	input         CLOCK_27,
+`ifdef USE_CLOCK_50
+	input         CLOCK_50,
+`endif
 
 	output        LED,
 	output [VGA_BITS-1:0] VGA_R,
@@ -30,6 +33,20 @@ module TSConf_top
 	output        VGA_HS,
 	output        VGA_VS,
 
+`ifdef USE_HDMI
+	output        HDMI_RST,
+	output  [7:0] HDMI_R,
+	output  [7:0] HDMI_G,
+	output  [7:0] HDMI_B,
+	output        HDMI_HS,
+	output        HDMI_VS,
+	output        HDMI_PCLK,
+	output        HDMI_DE,
+	inout         HDMI_SDA,
+	inout         HDMI_SCL,
+	input         HDMI_INT,
+`endif
+
 	input         SPI_SCK,
 	inout         SPI_DO,
 	input         SPI_DI,
@@ -37,7 +54,14 @@ module TSConf_top
 	input         SPI_SS3,    // OSD
 	input         CONF_DATA0, // SPI_SS for user_io
 
+`ifdef USE_QSPI
+	input         QSCK,
+	input         QCSn,
+	inout   [3:0] QDAT,
+`endif
+`ifndef NO_DIRECT_UPLOAD
 	input         SPI_SS4,
+`endif
 
 	output [12:0] SDRAM_A,
 	inout  [15:0] SDRAM_DQ,
@@ -51,21 +75,122 @@ module TSConf_top
 	output        SDRAM_CLK,
 	output        SDRAM_CKE,
 
+`ifdef DUAL_SDRAM
+	output [12:0] SDRAM2_A,
+	inout  [15:0] SDRAM2_DQ,
+	output        SDRAM2_DQML,
+	output        SDRAM2_DQMH,
+	output        SDRAM2_nWE,
+	output        SDRAM2_nCAS,
+	output        SDRAM2_nRAS,
+	output        SDRAM2_nCS,
+	output  [1:0] SDRAM2_BA,
+	output        SDRAM2_CLK,
+	output        SDRAM2_CKE,
+`endif
+
 	output        AUDIO_L,
 	output        AUDIO_R,
-
+`ifdef I2S_AUDIO
+	output        I2S_BCK,
+	output        I2S_LRCK,
+	output        I2S_DATA,
+`endif
+`ifdef I2S_AUDIO_HDMI
+	output        HDMI_MCLK,
+	output        HDMI_BCK,
+	output        HDMI_LRCK,
+	output        HDMI_SDATA,
+`endif
+`ifdef SPDIF_AUDIO
+	output        SPDIF,
+`endif
+`ifdef USE_AUDIO_IN
+	input         AUDIO_IN,
+`endif
+`ifdef USE_MIDI_PINS
+	input         MIDI_IN,
+	output        MIDI_OUT,
+`endif
 	input         UART_RX,
 	output        UART_TX
 );
 
-localparam VGA_BITS = 6;
-localparam bit BIG_OSD = 0;
+`ifdef NO_DIRECT_UPLOAD
+localparam bit DIRECT_UPLOAD = 0;
+wire SPI_SS4 = 1;
+`else
+localparam bit DIRECT_UPLOAD = 1;
+`endif
 
+`ifdef USE_QSPI
+localparam bit QSPI = 1;
+assign QDAT = 4'hZ;
+`else
+localparam bit QSPI = 0;
+`endif
+
+`ifdef VGA_8BIT
+localparam VGA_BITS = 8;
+`else
+localparam VGA_BITS = 6;
+`endif
+
+`ifdef USE_HDMI
+localparam bit HDMI = 1;
+assign HDMI_RST = 1'b1;
+`else
+localparam bit HDMI = 0;
+`endif
+
+`ifdef BIG_OSD
+localparam bit BIG_OSD = 1;
+`define SEP "-;",
+`else
+localparam bit BIG_OSD = 0;
+`define SEP
+`endif
+
+`ifdef USE_AUDIO_IN
+localparam bit USE_AUDIO_IN = 1;
+`else
+localparam bit USE_AUDIO_IN = 0;
+`endif
+
+`ifdef USE_MIDI_PINS
+localparam bit USE_MIDI_PINS = 1;
+`else
+localparam bit USE_MIDI_PINS = 0;
+`endif
+
+// remove this if the 2nd chip is actually used
+`ifdef DUAL_SDRAM
+assign SDRAM2_A = 13'hZZZZ;
+assign SDRAM2_BA = 0;
+assign SDRAM2_DQML = 0;
+assign SDRAM2_DQMH = 0;
+assign SDRAM2_CKE = 0;
+assign SDRAM2_CLK = 0;
+assign SDRAM2_nCS = 1;
+assign SDRAM2_DQ = 16'hZZZZ;
+assign SDRAM2_nCAS = 1;
+assign SDRAM2_nRAS = 1;
+assign SDRAM2_nWE = 1;
+`endif
+
+`ifdef I2S_AUDIO
+`ifdef I2S_AUDIO_HDMI
+assign HDMI_MCLK = 0;
+assign HDMI_BCK = I2S_BCK;
+assign HDMI_LRCK = I2S_LRCK;
+assign HDMI_SDATA = I2S_DATA;
+`endif
+`endif
 
 assign LED = ~ioctl_download & ~ioctl_upload & UART_RX;
 
-
 `include "build_id.v"
+
 localparam CONF_STR = {
 	"TSConf;;",
 	"O78,Joystick 1,Kempston,Sinclair 1,Sinclair 2,Cursor;",
@@ -95,12 +220,19 @@ wire clk_sys;
 wire clk_ram;
 pll pll
 (
+`ifdef CLOCK_IN_50
+	.inclk0(CLOCK_50),
+`else
 	.inclk0(CLOCK_27),
-	.c0(clk_ram),
+`endif
+	.c0(clk_ram),			// 84MHz
 	.c1(clk_sys),
 	.locked()
 );
 
+`ifdef CLOCK_IN_50
+//    SDRAM_CLK = ~clk_ram,
+`else
 altclkctrl
 #(
 	.number_of_clocks(1),
@@ -113,6 +245,7 @@ altclkctrl
 	.inclk(clk_ram),
 	.outclk(SDRAM_CLK)
 );
+`endif
 
 reg ce_28m;
 always @(negedge clk_sys) begin
@@ -315,7 +448,7 @@ tsconf tsconf
 	.SDRAM_nRAS(SDRAM_nRAS),
 	.SDRAM_CKE(SDRAM_CKE),
 	.SDRAM_nCS(SDRAM_nCS),
-	// .SDRAM_CLK(SDRAM_CLK),
+	.SDRAM_CLK(SDRAM_CLK),
 
 	.VRED(R),
 	.VGRN(G),
@@ -437,15 +570,17 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 
 
 //////////////////   SOUND   ///////////////////
-wire dac_l, dac_r;
-hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
-	.clk(clk_sys & ce_28m),
-	.reset_n(~init_reset),
-	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
-	.q_l(dac_l),
-	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
-	.q_r(dac_r)
-);
+
+wire DAC_L, DAC_R;
+
+//hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
+//	.clk(clk_sys & ce_28m),
+//	.reset_n(~init_reset),
+//	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
+//	.q_l(dac_l),
+//	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
+//	.q_r(dac_r)
+//);
 
 reg [23:0] mute_cnt = 0;
 always @(posedge clk_sys) begin
@@ -454,8 +589,66 @@ always @(posedge clk_sys) begin
 	else if (mute_cnt && ce_28m)
 		mute_cnt <= mute_cnt + 1'b1;
 end
-assign AUDIO_L = mute_cnt? 1'bZ : dac_l;
-assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
+assign AUDIO_L = mute_cnt? 1'bZ : DAC_L;
+assign AUDIO_R = mute_cnt? 1'bZ : DAC_R;
 
+
+////////////////////////////////////////////////////////
+
+sigma_delta_dac #(10) dac_l
+(
+	//.CLK(clk_sys && ce_28m),
+	.CLK(clk_sys),
+	.RESET(~init_reset),
+	//.DACin(SOUND_L),
+	.DACin({~SOUND_L[15], SOUND_L[14:0]}),
+	.DACout(DAC_L)
+);
+
+sigma_delta_dac #(10) dac_r
+(
+	//.CLK(clk_sys && ce_28m),
+	.CLK(clk_sys),
+	.RESET(~init_reset),
+	//.DACin(SOUND_R),
+	.DACin({~SOUND_R[15], SOUND_R[14:0]}),
+	.DACout(DAC_R)
+);
+
+`ifdef I2S_AUDIO
+i2s i2s (
+	.reset(init_reset),
+	.clk(clk_sys),
+	.clk_rate(32'd84_000_000),
+
+	.sclk(I2S_BCK),
+	.lrclk(I2S_LRCK),
+	.sdata(I2S_DATA),
+
+	.left_chan({{~SOUND_L[15]}, SOUND_L[14:0]}),
+	//.left_chan(SOUND_L),
+	.right_chan({{~SOUND_R[15]}, SOUND_R[14:0]})
+	//.right_chan(SOUND_R)
+);
+`endif
+
+`ifdef I2S_AUDIO_HDMI
+assign HDMI_MCLK = 0;
+always @(posedge clk_sys) begin
+	HDMI_BCK <= I2S_BCK;
+	HDMI_LRCK <= I2S_LRCK;
+	HDMI_SDATA <= I2S_DATA;
+end
+`endif
+
+`ifdef SPDIF_AUDIO
+spdif spdif (
+	.clk_i(clk_sys),
+	.rst_i(init_reset),
+	.clk_rate_i(32'd84_000_000),
+	.spdif_o(SPDIF),
+	.sample_i({{~SOUND_L[15]}, SOUND_L[14:0], {~SOUND_R[15]}, SOUND_R[14:0]})
+);
+`endif
 
 endmodule
