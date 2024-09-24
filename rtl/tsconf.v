@@ -956,10 +956,13 @@ module tsconf
 
   // MC146818A RTC
   reg ena_0_4375mhz;
-  always @(posedge fclk) begin
-    reg [5:0] div;
-    div <= div + 1'd1;
-    ena_0_4375mhz <= !div; //28MHz/64
+  always @(posedge clk) begin
+    reg [7:0] div;
+    if (div == 191)
+      div <= 0;
+    else
+      div <= div + 1'd1;
+    ena_0_4375mhz <= !div;
   end
 
   mc146818a mc146818a
