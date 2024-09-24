@@ -24,7 +24,7 @@ module kempston_mouse
 	input        clk_sys,
 	input        reset,
 
-	input [24:0] ps2_mouse,
+	input [28:0] ps2_mouse,
 	
 	input  [2:0] addr,
 	output       sel,
@@ -36,6 +36,7 @@ assign sel  = port_sel;
 
 reg [11:0] dx;
 reg [11:0] dy;
+reg  [3:0] dz;
 
 reg  [7:0] data;
 reg        port_sel;
@@ -44,22 +45,24 @@ always @* begin
 	casex(addr)
 		 3'b011: data = dx[7:0];
 		 3'b111: data = dy[7:0];
-		 3'bX10: data = ~{5'b00000,ps2_mouse[2], ps2_mouse[0], ps2_mouse[1]} ;
+		 3'bX10: data = {dz, 1'b1, ~ps2_mouse[2:0]};
 		default: {port_sel,data} = 8'hFF;
 	endcase
 end
 
 always @(posedge clk_sys) begin
 	reg old_status;
-	old_status <= ps2_mouse[24];
+	old_status <= ps2_mouse[28];
 
 	if(reset) begin
 		dx <= 128; // dx != dy for better mouse detection
 		dy <= 0;
+		dz <= 4'b1111;
 	end
-	else if(old_status != ps2_mouse[24]) begin
+	else if(old_status != ps2_mouse[28]) begin
 		dx <= dx + {{4{ps2_mouse[4]}},ps2_mouse[15:8]};
 		dy <= dy + {{4{ps2_mouse[5]}},ps2_mouse[23:16]};
+		dz <= dz - ps2_mouse[27:24];
 	end
 end
 

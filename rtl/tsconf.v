@@ -60,7 +60,7 @@ module tsconf
 
   // User input
   input  [10:0] PS2_KEY,
-  input  [24:0] PS2_MOUSE,
+  input  [28:0] PS2_MOUSE,
   input   [7:0] JOYSTICK1,
   input   [7:0] JOYSTICK2,
 
