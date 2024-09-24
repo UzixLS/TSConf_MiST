@@ -571,16 +571,17 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 
 //////////////////   SOUND   ///////////////////
 
-wire DAC_L, DAC_R;
+wire dac_l, dac_r;
+//wire DAC_L, DAC_R;
 
-//hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
-//	.clk(clk_sys & ce_28m),
-//	.reset_n(~init_reset),
-//	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
-//	.q_l(dac_l),
-//	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
-//	.q_r(dac_r)
-//);
+hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
+	.clk(clk_sys & ce_28m),
+	.reset_n(~init_reset),
+	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
+	.q_l(dac_l),
+	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
+	.q_r(dac_r)
+);
 
 reg [23:0] mute_cnt = 0;
 always @(posedge clk_sys) begin
@@ -589,31 +590,35 @@ always @(posedge clk_sys) begin
 	else if (mute_cnt && ce_28m)
 		mute_cnt <= mute_cnt + 1'b1;
 end
-assign AUDIO_L = mute_cnt? 1'bZ : DAC_L;
-assign AUDIO_R = mute_cnt? 1'bZ : DAC_R;
+
+assign AUDIO_L = mute_cnt? 1'bZ : dac_l;
+assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
+
+//assign AUDIO_L = mute_cnt? 1'bZ : DAC_L;
+//assign AUDIO_R = mute_cnt? 1'bZ : DAC_R;
 
 
 ////////////////////////////////////////////////////////
 
-sigma_delta_dac #(10) dac_l
-(
-	//.CLK(clk_sys && ce_28m),
-	.CLK(clk_sys),
-	.RESET(~init_reset),
-	//.DACin(SOUND_L),
-	.DACin({~SOUND_L[15], SOUND_L[14:0]}),
-	.DACout(DAC_L)
-);
+//sigma_delta_dac #(16) dac_l
+//(
+//	//.CLK(clk_sys && ce_28m),
+//	.CLK(clk_sys),
+//	.RESET(~init_reset),
+//	//.DACin(SOUND_L),
+//	.DACin({~SOUND_L[15], SOUND_L[14:0]}),
+//	.DACout(DAC_L)
+//);
 
-sigma_delta_dac #(10) dac_r
-(
-	//.CLK(clk_sys && ce_28m),
-	.CLK(clk_sys),
-	.RESET(~init_reset),
-	//.DACin(SOUND_R),
-	.DACin({~SOUND_R[15], SOUND_R[14:0]}),
-	.DACout(DAC_R)
-);
+//sigma_delta_dac #(16) dac_r
+//(
+//	//.CLK(clk_sys && ce_28m),
+//	.CLK(clk_sys),
+//	.RESET(~init_reset),
+//	//.DACin(SOUND_R),
+//	.DACin({~SOUND_R[15], SOUND_R[14:0]}),
+//	.DACout(DAC_R)
+//);
 
 `ifdef I2S_AUDIO
 i2s i2s (
@@ -625,10 +630,10 @@ i2s i2s (
 	.lrclk(I2S_LRCK),
 	.sdata(I2S_DATA),
 
-	.left_chan({{~SOUND_L[15]}, SOUND_L[14:0]}),
-	//.left_chan(SOUND_L),
-	.right_chan({{~SOUND_R[15]}, SOUND_R[14:0]})
-	//.right_chan(SOUND_R)
+	//.left_chan({{~SOUND_L[15]}, SOUND_L[14:0]}),
+	.left_chan(SOUND_L),
+	//.right_chan({{~SOUND_R[15]}, SOUND_R[14:0]})
+	.right_chan(SOUND_R)
 );
 `endif
 
