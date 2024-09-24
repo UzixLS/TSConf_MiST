@@ -480,6 +480,7 @@ set_global_assignment -name VERILOG_FILE mist/cyc4gx/pll.v
 set_global_assignment -name QIP_FILE files.qip
 set_global_assignment -name QIP_FILE "mist/mist-modules/mist.qip"
 set_global_assignment -name VERILOG_FILE mist/sigma_delta_dac.v
+set_global_assignment -name VHDL_FILE mist/dac_dsm2v.vhd
 set_global_assignment -name SYSTEMVERILOG_FILE TSConf.sv
 set_global_assignment -name SDC_FILE TSConf.sdc
 

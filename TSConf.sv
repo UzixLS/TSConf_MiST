@@ -571,16 +571,31 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 
 //////////////////   SOUND   ///////////////////
 
-wire dac_l, dac_r;
-//wire DAC_L, DAC_R;
+//wire dac_l, dac_r;
 
-hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
-	.clk(clk_sys & ce_28m),
-	.reset_n(~init_reset),
-	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
-	.q_l(dac_l),
-	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
-	.q_r(dac_r)
+//hybrid_pwm_sd_2ndorder #(.signalwidth(16)) dac (
+//	.clk(clk_sys & ce_28m),
+//	.reset_n(~init_reset),
+//	.d_l({~SOUND_L[15], SOUND_L[14:0]}),
+//	.q_l(dac_l),
+//	.d_r({~SOUND_R[15], SOUND_R[14:0]}),
+//	.q_r(dac_r)
+//);
+
+wire DAC_L, DAC_R;
+
+dac_dsm2v #(16) dac_l (
+   .clock_i      (clk_sys),
+   .reset_i      (~init_reset),    // .reset_i(0)
+   .dac_i        (SOUND_L),
+   .dac_o        (DAC_L)
+);
+
+dac_dsm2v #(16) dac_r (
+   .clock_i      (clk_sys),
+   .reset_i      (~init_reset),
+   .dac_i        (SOUND_R),
+   .dac_o        (DAC_R)
 );
 
 reg [23:0] mute_cnt = 0;
@@ -591,11 +606,11 @@ always @(posedge clk_sys) begin
 		mute_cnt <= mute_cnt + 1'b1;
 end
 
-assign AUDIO_L = mute_cnt? 1'bZ : dac_l;
-assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
+//assign AUDIO_L = mute_cnt? 1'bZ : dac_l;
+//assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
 
-//assign AUDIO_L = mute_cnt? 1'bZ : DAC_L;
-//assign AUDIO_R = mute_cnt? 1'bZ : DAC_R;
+assign AUDIO_L = mute_cnt? 1'bZ : DAC_L;
+assign AUDIO_R = mute_cnt? 1'bZ : DAC_R;
 
 
 ////////////////////////////////////////////////////////
@@ -624,7 +639,7 @@ assign AUDIO_R = mute_cnt? 1'bZ : dac_r;
 i2s i2s (
 	.reset(init_reset),
 	.clk(clk_sys),
-	.clk_rate(32'd84_000_000),
+	.clk_rate(32'd84_000_000),     // 84MHz
 
 	.sclk(I2S_BCK),
 	.lrclk(I2S_LRCK),
@@ -652,7 +667,7 @@ spdif spdif (
 	.rst_i(init_reset),
 	.clk_rate_i(32'd84_000_000),
 	.spdif_o(SPDIF),
-	.sample_i({{~SOUND_L[15]}, SOUND_L[14:0], {~SOUND_R[15]}, SOUND_R[14:0]})
+	.sample_i({SOUND_L, SOUND_R})
 );
 `endif
 
