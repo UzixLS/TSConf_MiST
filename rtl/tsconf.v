@@ -1134,16 +1134,40 @@ module tsconf
   always @(posedge fclk) if (beeper_wr) port_xxfe_reg <= d;
   assign TAPE_OUT = port_xxfe_reg[3];
 
-  // Audio output
-  wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
-  wire [11:0] audio_r = ts_r + {gs_r[14], gs_r[14:4]} + {2'b00, covox_c, 2'b00} + {2'b00, covox_d, 2'b00} + {1'b0, saa_out_r, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
 
-  compressor compressor
-  (
-    fclk,
-    audio_l, audio_r,
-    SOUND_L, SOUND_R
-  );
+  // Audio output
+  //wire [11:0] audio_l = ts_l + {gs_l[14], gs_l[14:4]} + {2'b00, covox_a, 2'b00} + {2'b00, covox_b, 2'b00} + {1'b0, saa_out_l, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
+  //wire [11:0] audio_r = ts_r + {gs_r[14], gs_r[14:4]} + {2'b00, covox_c, 2'b00} + {2'b00, covox_d, 2'b00} + {1'b0, saa_out_r, 3'b000} + {3'b000, port_xxfe_reg[4], 8'b00000000};
+
+  //compressor compressor
+  //(
+  //  fclk,
+  //  audio_l, audio_r,
+  //  SOUND_L, SOUND_R
+  //);
+
+  ////////////////////////////////////////////////////////
+
+  // gs_sound = 15 bits unsigned
+  // covox_a = 8 bits unsigned
+  // saa_out = 8 bits unsigned
+  // turbosound = 12 bits unsigned
+  // tape = 1bit
+
+  //reg [15:0] gs_l_u = {1'b0,gs_l};
+  //reg [15:0] gs_r_u = {1'b0,gs_r};
+  //reg [15:0] ts_l_u = {1'b0,ts_l,3'b0};
+  //reg [15:0] ts_r_u = {1'b0,ts_r,3'b0};
+  //reg [15:0] covox_l = {2'b0, covox_a, 6'b0} + {2'b0, covox_b, 6'b0};
+  //reg [15:0] covox_r = {2'b0, covox_c, 6'b0} + {2'b0, covox_c, 6'b0};
+  //reg [15:0] beeper_lr = {3'b000, port_xxfe_reg[4], 12'b0};
+  //assign SOUND_L=gs_l_u+ts_l_u+covox_l+beeper_lr;
+  //assign SOUND_R=gs_r_u+ts_r_u+covox_r+beeper_lr;
+
+  assign SOUND_L = {1'b0,ts_l,3'b0} + {1'b0,gs_l[14],gs_l[14:4],4'b0} + {2'b0, covox_a, 6'b0} + {2'b0, covox_b, 6'b0} + {1'b0, saa_out_l, 7'b0} +  {3'b000, port_xxfe_reg[4], 12'b0};
+  assign SOUND_R = {1'b0,ts_r,3'b0} + {1'b0,gs_r[14],gs_r[14:4],4'b0} + {2'b0, covox_c, 6'b0} + {2'b0, covox_c, 6'b0} + {1'b0, saa_out_l, 7'b0} +  {3'b000, port_xxfe_reg[4], 12'b0};
+  //assign SOUND_L = {1'b0,ts_l,3'b0} + {1'b0,gs_l} + {2'b0, covox_a, 6'b0} + {2'b0, covox_b, 6'b0} + {1'b0, saa_out_l, 7'b0} +  {3'b000, port_xxfe_reg[4], 12'b0};
+  //assign SOUND_R = {1'b0,ts_r,3'b0} + {1'b0,gs_r} + {2'b0, covox_c, 6'b0} + {2'b0, covox_c, 6'b0} + {1'b0, saa_out_l, 7'b0} +  {3'b000, port_xxfe_reg[4], 12'b0};
 
 
   // CPU interface
