@@ -2,8 +2,8 @@
 
 This is the port of TSConf (advanced ZX Spectrum-compatible platform) to [MiST](https://github.com/mist-devel/mist-board) and [MiST.1010](https://github.com/UzixLS/mist1010-board).
 
-## Other Ports
-2024.09.23 - Port to Poseidon-ep4cgx150 FPGA board. Thanks to RetroWiki Team: @Rampa069, @ron (@Retrocrypta) and @Turri21.
+**Other Ports:** 
+- 2024.09.23 - Port to Poseidon-ep4cgx150 FPGA board. Thanks to RetroWiki Team: @Rampa069, @ron (@Retrocrypta) and @Turri21.
 
 ## Features of this port
 - VDAC 1
