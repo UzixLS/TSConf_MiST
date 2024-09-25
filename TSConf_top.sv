@@ -299,12 +299,13 @@ wire  [7:0] key_code;
 
 wire  [8:0] mouse_x;
 wire  [8:0] mouse_y;
+wire  [3:0] mouse_z;
 wire  [7:0] mouse_flags;
 wire        mouse_strobe;
 
-wire        mouse_b0 = st_mouseswap? mouse_flags[0] : mouse_flags[1];
-wire        mouse_b1 = st_mouseswap? mouse_flags[1] : mouse_flags[0];
-wire [24:0] ps2_mouse = { mouse_strobe_level, mouse_y[7:0], mouse_x[7:0], mouse_flags[7:2], mouse_b1, mouse_b0 };
+wire        mouse_b0 = st_mouseswap? mouse_flags[1] : mouse_flags[0];
+wire        mouse_b1 = st_mouseswap? mouse_flags[0] : mouse_flags[1];
+wire [28:0] ps2_mouse = { mouse_strobe_level, mouse_z, mouse_y[7:0], mouse_x[7:0], mouse_flags[7:2], mouse_b1, mouse_b0 };
 reg         mouse_strobe_level;
 always @(posedge clk_sys) if (mouse_strobe) mouse_strobe_level <= ~mouse_strobe_level;
 
@@ -340,6 +341,7 @@ user_io #(.STRLEN($size(CONF_STR)>>3), .SD_IMAGES(2), .FEATURES(32'h0 | (BIG_OSD
 
 	.mouse_x(mouse_x),
 	.mouse_y(mouse_y),
+	.mouse_z(mouse_z),
 	.mouse_flags(mouse_flags),
 	.mouse_strobe(mouse_strobe),
 
