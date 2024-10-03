@@ -6,6 +6,8 @@ module keyboard
   output      [4:0] keyb,
   output reg        key_reset,
   output reg  [7:0] scancode,
+  input             scancode_ack,
+  input             scancode_clr,
   input      [10:0] ps2_key,
   input       [1:0] cfg_joystick1,
   input       [1:0] cfg_joystick2,
@@ -69,76 +71,76 @@ always @(posedge clk) begin
     case (cfg_joystick1)
     2'b01: begin // Sinclair 1
       case (joys_chn)
-      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h3d}; // Right  | 7
-      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h36}; // Left   | 6
-      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h3e}; // Down   | 8
-      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h46}; // Up     | 9
-      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h45}; // Fire 1 | 0
-      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h3a}; // Fire 2 | m
-      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h31}; // Fire 3 | n
-      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h32}; // Fire 4 | b
+      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h3d};  // Right  | 7
+      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h36};  // Left   | 6
+      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h3e};  // Down   | 8
+      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h46};  // Up     | 9
+      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h45};  // Fire 1 | 0
+      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h3a};  // Fire 2 | m
+      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h31};  // Fire 3 | n
+      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h32};  // Fire 4 | b
       endcase
     end
     2'b10: begin // Sinclair 2
       case (joys_chn)
-      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h1e}; // Right  | 2
-      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h16}; // Left   | 1
-      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h26}; // Down   | 3
-      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h25}; // Up     | 4
-      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h2e}; // Fire 1 | 5
-      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h1a}; // Fire 2 | z
-      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h22}; // Fire 3 | x
-      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h21}; // Fire 4 | c
+      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h1e};  // Right  | 2
+      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h16};  // Left   | 1
+      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h26};  // Down   | 3
+      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h25};  // Up     | 4
+      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h2e};  // Fire 1 | 5
+      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h1a};  // Fire 2 | z
+      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h22};  // Fire 3 | x
+      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h21};  // Fire 4 | c
       endcase
     end
     2'b11: begin // Cursor
       case (joys_chn)
-      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h74}; // Right  | Right
-      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h6b}; // Left   | Left
-      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h72}; // Down   | Down
-      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h75}; // Up     | Up
-      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h5a}; // Fire 1 | Enter
-      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h0d}; // Fire 2 | Tab
-      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h29}; // Fire 3 | Space
-      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h76}; // Fire 4 | Esc
+      0:  {strobe, press, code} <= {1'b1, joys[0 ], 9'h174}; // Right  | Right
+      1:  {strobe, press, code} <= {1'b1, joys[1 ], 9'h16b}; // Left   | Left
+      2:  {strobe, press, code} <= {1'b1, joys[2 ], 9'h172}; // Down   | Down
+      3:  {strobe, press, code} <= {1'b1, joys[3 ], 9'h175}; // Up     | Up
+      4:  {strobe, press, code} <= {1'b1, joys[4 ], 9'h5a};  // Fire 1 | Enter
+      5:  {strobe, press, code} <= {1'b1, joys[5 ], 9'h0d};  // Fire 2 | Tab
+      6:  {strobe, press, code} <= {1'b1, joys[6 ], 9'h29};  // Fire 3 | Space
+      7:  {strobe, press, code} <= {1'b1, joys[7 ], 9'h76};  // Fire 4 | Esc
       endcase
     end
     endcase
     case (cfg_joystick2)
     2'b01: begin // Sinclair 1
       case (joys_chn)
-      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h3d}; // Right  | 7
-      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h36}; // Left   | 6
-      10: {strobe, press, code} <= {1'b1, joys[10], 9'h3e}; // Down   | 8
-      11: {strobe, press, code} <= {1'b1, joys[11], 9'h46}; // Up     | 9
-      12: {strobe, press, code} <= {1'b1, joys[12], 9'h45}; // Fire 1 | 0
-      13: {strobe, press, code} <= {1'b1, joys[13], 9'h3a}; // Fire 2 | m
-      14: {strobe, press, code} <= {1'b1, joys[14], 9'h31}; // Fire 3 | n
-      15: {strobe, press, code} <= {1'b1, joys[15], 9'h32}; // Fire 4 | b
+      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h3d};  // Right  | 7
+      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h36};  // Left   | 6
+      10: {strobe, press, code} <= {1'b1, joys[10], 9'h3e};  // Down   | 8
+      11: {strobe, press, code} <= {1'b1, joys[11], 9'h46};  // Up     | 9
+      12: {strobe, press, code} <= {1'b1, joys[12], 9'h45};  // Fire 1 | 0
+      13: {strobe, press, code} <= {1'b1, joys[13], 9'h3a};  // Fire 2 | m
+      14: {strobe, press, code} <= {1'b1, joys[14], 9'h31};  // Fire 3 | n
+      15: {strobe, press, code} <= {1'b1, joys[15], 9'h32};  // Fire 4 | b
       endcase
     end
     2'b10: begin // Sinclair 2
       case (joys_chn)
-      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h1e}; // Right  | 2
-      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h16}; // Left   | 1
-      10: {strobe, press, code} <= {1'b1, joys[10], 9'h26}; // Down   | 3
-      11: {strobe, press, code} <= {1'b1, joys[11], 9'h25}; // Up     | 4
-      12: {strobe, press, code} <= {1'b1, joys[12], 9'h2e}; // Fire 1 | 5
-      13: {strobe, press, code} <= {1'b1, joys[13], 9'h1a}; // Fire 2 | z
-      14: {strobe, press, code} <= {1'b1, joys[14], 9'h22}; // Fire 3 | x
-      15: {strobe, press, code} <= {1'b1, joys[15], 9'h21}; // Fire 4 | c
+      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h1e};  // Right  | 2
+      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h16};  // Left   | 1
+      10: {strobe, press, code} <= {1'b1, joys[10], 9'h26};  // Down   | 3
+      11: {strobe, press, code} <= {1'b1, joys[11], 9'h25};  // Up     | 4
+      12: {strobe, press, code} <= {1'b1, joys[12], 9'h2e};  // Fire 1 | 5
+      13: {strobe, press, code} <= {1'b1, joys[13], 9'h1a};  // Fire 2 | z
+      14: {strobe, press, code} <= {1'b1, joys[14], 9'h22};  // Fire 3 | x
+      15: {strobe, press, code} <= {1'b1, joys[15], 9'h21};  // Fire 4 | c
       endcase
     end
     2'b11: begin // Cursor
       case (joys_chn)
-      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h74}; // Right  | Right
-      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h6b}; // Left   | Left
-      10: {strobe, press, code} <= {1'b1, joys[10], 9'h72}; // Down   | Down
-      11: {strobe, press, code} <= {1'b1, joys[11], 9'h75}; // Up     | Up
-      12: {strobe, press, code} <= {1'b1, joys[12], 9'h5a}; // Fire 1 | Enter
-      13: {strobe, press, code} <= {1'b1, joys[13], 9'h0d}; // Fire 2 | Tab
-      14: {strobe, press, code} <= {1'b1, joys[14], 9'h29}; // Fire 3 | Space
-      15: {strobe, press, code} <= {1'b1, joys[15], 9'h76}; // Fire 4 | Esc
+      8:  {strobe, press, code} <= {1'b1, joys[8 ], 9'h174}; // Right  | Right
+      9:  {strobe, press, code} <= {1'b1, joys[9 ], 9'h16b}; // Left   | Left
+      10: {strobe, press, code} <= {1'b1, joys[10], 9'h172}; // Down   | Down
+      11: {strobe, press, code} <= {1'b1, joys[11], 9'h175}; // Up     | Up
+      12: {strobe, press, code} <= {1'b1, joys[12], 9'h5a};  // Fire 1 | Enter
+      13: {strobe, press, code} <= {1'b1, joys[13], 9'h0d};  // Fire 2 | Tab
+      14: {strobe, press, code} <= {1'b1, joys[14], 9'h29};  // Fire 3 | Space
+      15: {strobe, press, code} <= {1'b1, joys[15], 9'h76};  // Fire 4 | Esc
       endcase
     end
     endcase
@@ -157,14 +159,9 @@ always @(posedge clk or posedge reset) begin
     keys[6] <= 5'b11111;
     keys[7] <= 5'b11111;
     key_reset <= 0;
-    scancode <= 0;
   end
   else begin
     if (strobe) begin
-      if (press)
-        scancode <= code[7:0];
-      else
-        scancode <= 8'hFF;
       case (code[7:0])
         8'h12: keys[0][0] <= ~press; // Left shift (CAPS SHIFT)
         8'h59: keys[0][0] <= ~press; // Right shift (CAPS SHIFT)
@@ -296,5 +293,78 @@ always @(posedge clk or posedge reset) begin
     end
   end
 end
+
+
+reg fifo_rdreq;
+wire [9:0] fifo_q;
+wire fifo_empty;
+scfifo
+#(
+  .lpm_width(10),
+  .lpm_widthu(6),
+  .lpm_numwords(64),
+  .lpm_showahead("OFF"),
+  .overflow_checking("ON"),
+  .underflow_checking("OFF"),
+  .add_ram_output_register("ON")
+)
+fifo_scancodes
+(
+  .clock(clk),
+  .data({~press, code}),
+  .wrreq(strobe),
+  .rdreq(fifo_rdreq),
+  .sclr(scancode_clr),
+  .q(fifo_q),
+  .empty(fifo_empty)
+);
+
+reg [1:0] step = 0;
+always @(posedge clk) begin
+  fifo_rdreq <= 0;
+  scancode <= 0;
+
+  case (step)
+
+  2'd0: begin
+    if (!fifo_empty) begin
+      fifo_rdreq <= 1'b1;
+      step <= step + 1'b1;
+    end
+  end
+
+  2'd1: begin
+    if (fifo_q[8])
+      scancode <= 8'hE0;
+    else if (fifo_q[9])
+      scancode <= 8'hF0;
+    else
+      scancode <= fifo_q[7:0];
+    if (scancode_ack)
+      step <= step + 1'b1;
+  end
+
+  2'd2: begin
+    if (fifo_q[9] && fifo_q[8])
+      scancode <= 8'hF0;
+    else if (fifo_q[8] || fifo_q[9])
+      scancode <= fifo_q[7:0];
+    if (scancode_ack)
+      step <= step + 1'b1;
+  end
+
+  2'd3: begin
+    if (fifo_q[9] && fifo_q[8])
+      scancode <= fifo_q[7:0];
+    if (scancode_ack)
+      step <= step + 1'b1;
+  end
+
+  endcase
+
+  if (scancode_clr)
+    step <= 0;
+end
+
 
 endmodule

@@ -926,6 +926,8 @@ module tsconf
   // PS/2 Keyboard
   wire       key_reset;
   wire [7:0] key_scancode;
+  wire       key_scancode_ack;
+  wire       key_scancode_clr;
 
   keyboard keyboard
   (
@@ -935,6 +937,8 @@ module tsconf
     .keyb(kbd_port_data),
     .key_reset(key_reset),
     .scancode(key_scancode),
+    .scancode_ack(key_scancode_ack),
+    .scancode_clr(key_scancode_clr),
     .ps2_key(PS2_KEY),
     .cfg_joystick1(CFG_JOYSTICK1),
     .cfg_joystick2(CFG_JOYSTICK2),
@@ -973,6 +977,9 @@ module tsconf
     .CS(1),
     .RTC(RTC),
     .KEYSCANCODE(key_scancode),
+    .KEYSCANCODE_ACK(key_scancode_ack),
+    .KEYSCANCODE_CLR(key_scancode_clr),
+    .RD(wait_start_gluclock & ~rd_n),
     .WR(wait_start_gluclock & ~wr_n),
     .A(wait_addr),
     .DI(d),
