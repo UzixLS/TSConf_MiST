@@ -167,150 +167,62 @@ always @(posedge clk) begin
 end
 
 
+reg c [0:255];
+
 always @(posedge clk or posedge reset) begin
+  integer i;
   if (reset) begin
-    keys[0] <= 5'b11111;
-    keys[1] <= 5'b11111;
-    keys[2] <= 5'b11111;
-    keys[3] <= 5'b11111;
-    keys[4] <= 5'b11111;
-    keys[5] <= 5'b11111;
-    keys[6] <= 5'b11111;
-    keys[7] <= 5'b11111;
-    key_reset <= 0;
+    for (i = 0; i < 256; i = i + 1)
+      c[i] <= 1'b1;
   end
-  else begin
-    if (strobe) begin
-      case (code[7:0])
-        8'h12: keys[0][0] <= ~press; // Left shift (CAPS SHIFT)
-        8'h59: keys[0][0] <= ~press; // Right shift (CAPS SHIFT)
-        8'h1a: keys[0][1] <= ~press; // Z
-        8'h22: keys[0][2] <= ~press; // X
-        8'h21: keys[0][3] <= ~press; // C
-        8'h2a: keys[0][4] <= ~press; // V
-
-        8'h1c: keys[1][0] <= ~press; // A
-        8'h1b: keys[1][1] <= ~press; // S
-        8'h23: keys[1][2] <= ~press; // D
-        8'h2b: keys[1][3] <= ~press; // F
-        8'h34: keys[1][4] <= ~press; // G
-
-        8'h15: keys[2][0] <= ~press; // Q
-        8'h1d: keys[2][1] <= ~press; // W
-        8'h24: keys[2][2] <= ~press; // E
-        8'h2d: keys[2][3] <= ~press; // R
-        8'h2c: keys[2][4] <= ~press; // T
-
-        8'h16: keys[3][0] <= ~press; // 1
-        8'h1e: keys[3][1] <= ~press; // 2
-        8'h26: keys[3][2] <= ~press; // 3
-        8'h25: keys[3][3] <= ~press; // 4
-        8'h2e: keys[3][4] <= ~press; // 5
-
-        8'h45: keys[4][0] <= ~press; // 0
-        8'h46: keys[4][1] <= ~press; // 9
-        8'h3e: keys[4][2] <= ~press; // 8
-        8'h3d: keys[4][3] <= ~press; // 7
-        8'h36: keys[4][4] <= ~press; // 6
-
-        8'h4d: keys[5][0] <= ~press; // P
-        8'h44: keys[5][1] <= ~press; // O
-        8'h43: keys[5][2] <= ~press; // I
-        8'h3c: keys[5][3] <= ~press; // U
-        8'h35: keys[5][4] <= ~press; // Y
-
-        8'h5a: keys[6][0] <= ~press; // ENTER
-        8'h4b: keys[6][1] <= ~press; // L
-        8'h42: keys[6][2] <= ~press; // K
-        8'h3b: keys[6][3] <= ~press; // J
-        8'h33: keys[6][4] <= ~press; // H
-
-        8'h29: keys[7][0] <= ~press; // SPACE
-        8'h14: keys[7][1] <= ~press; // CTRL (Symbol Shift)
-        8'h3a: keys[7][2] <= ~press; // M
-        8'h31: keys[7][3] <= ~press; // N
-        8'h32: keys[7][4] <= ~press; // B
-
-        // Cursor keys
-        8'h6b: begin
-          keys[0][0] <= ~press; // Left (CAPS 5)
-          keys[3][4] <= ~press;
-        end
-        8'h72: begin
-          keys[0][0] <= ~press; // Down (CAPS 6)
-          keys[4][4] <= ~press;
-        end
-        8'h75: begin
-          keys[0][0] <= ~press; // Up (CAPS 7)
-          keys[4][3] <= ~press;
-        end
-        8'h74: begin
-          keys[0][0] <= ~press; // Right (CAPS 8)
-          keys[4][2] <= ~press;
-        end
-
-        // Other special keys sent to the ULA as key combinations
-        8'h66: begin
-          keys[0][0] <= ~press; // Backspace (CAPS 0)
-          keys[4][0] <= ~press;
-        end
-        8'h58: begin
-          keys[0][0] <= ~press; // Caps lock (CAPS 2)
-          keys[3][1] <= ~press;
-        end
-        8'h0d: begin
-          keys[0][0] <= ~press; // Tab (CAPS SPACE)
-          keys[7][0] <= ~press;
-        end
-        8'h49: begin
-          keys[7][2] <= ~press; // .
-          keys[7][1] <= ~press;
-        end
-        8'h4e: begin
-          keys[6][3] <= ~press; // -
-          keys[7][1] <= ~press;
-        end
-        8'h0e: begin
-          keys[3][0] <= ~press; // ` (EDIT)
-          keys[0][0] <= ~press;
-        end
-        8'h41: begin
-          keys[7][3] <= ~press; // ,
-          keys[7][1] <= ~press;
-        end
-        8'h4c: begin
-          keys[5][1] <= ~press; // ;
-          keys[7][1] <= ~press;
-        end
-        8'h52: begin
-          keys[5][0] <= ~press; // "
-          keys[7][1] <= ~press;
-        end
-        8'h5d: begin
-          keys[0][1] <= ~press; // :
-          keys[7][1] <= ~press;
-        end
-        8'h55: begin
-          keys[6][1] <= ~press; // =
-          keys[7][1] <= ~press;
-        end
-        8'h54: begin
-          keys[4][2] <= ~press; // (
-          keys[7][1] <= ~press;
-        end
-        8'h5b: begin
-          keys[4][1] <= ~press; // )
-          keys[7][1] <= ~press;
-        end
-        8'h4a: begin
-          keys[0][3] <= ~press; // ?
-          keys[7][1] <= ~press;
-        end
-
-        8'h78: key_reset <= press;
-      endcase
-    end
+  else if (strobe) begin
+    c[code[7:0]] <= ~press;
   end
+end
+
+always @* begin
+  key_reset  <= ~c['h78];
+
+  keys[0][0] <= c['h12]&c['h6b]&c['h72]&c['h75]&c['h74]&c['h66]&c['h58]&c['h0d]&c['h0e]&c['h7d]&c['h7a]&c['h71]&c['h5d]; // CAPS SHIFT <= Lshift & Left & Down & Up & Right & Backspace & Caps & Tab & ` & PgUp & PgDn & Del & \
+  keys[0][1] <= c['h1a]&c['h4c];         // Z & ;
+  keys[0][2] <= c['h22];                 // X
+  keys[0][3] <= c['h21]&c['h4a];         // C & ?
+  keys[0][4] <= c['h2a];                 // V
+  keys[1][0] <= c['h1c];                 // A
+  keys[1][1] <= c['h1b];                 // S
+  keys[1][2] <= c['h23];                 // D
+  keys[1][3] <= c['h2b];                 // F
+  keys[1][4] <= c['h34];                 // G
+  keys[2][0] <= c['h15]&c['h6c];         // Q & Home
+  keys[2][1] <= c['h1d]&c['h70];         // W & Ins
+  keys[2][2] <= c['h24]&c['h69];         // E
+  keys[2][3] <= c['h2d];                 // R
+  keys[2][4] <= c['h2c];                 // T
+  keys[3][0] <= c['h16]&c['h0e];         // 1 & ` (EDIT)
+  keys[3][1] <= c['h1e]&c['h58];         // 2 & Caps Lock
+  keys[3][2] <= c['h26]&c['h7d];         // 3 & PgUp
+  keys[3][3] <= c['h25]&c['h7a];         // 4 & PgDn
+  keys[3][4] <= c['h2e]&c['h6b];         // 5 & Left
+  keys[4][0] <= c['h45]&c['h66];         // 0 & Backspace
+  keys[4][1] <= c['h46]&c['h5b]&c['h71]; // 9 & ] & Del
+  keys[4][2] <= c['h3e]&c['h74]&c['h54]; // 8 & Right & [
+  keys[4][3] <= c['h3d]&c['h75];         // 7 & Up
+  keys[4][4] <= c['h36]&c['h72];         // 6 & Down
+  keys[5][0] <= c['h4d]&c['h52];         // P & "
+  keys[5][1] <= c['h44];                 // O
+  keys[5][2] <= c['h43];                 // I
+  keys[5][3] <= c['h3c];                 // U
+  keys[5][4] <= c['h35];                 // Y
+  keys[6][0] <= c['h5a];                 // Enter
+  keys[6][1] <= c['h4b];                 // L
+  keys[6][2] <= c['h42]&c['h55];         // K & +
+  keys[6][3] <= c['h3b]&c['h4e];         // J & -
+  keys[6][4] <= c['h33];                 // H
+  keys[7][0] <= c['h29]&c['h0d];         // Space & Tab
+  keys[7][1] <= c['h59]&c['h49]&c['h4e]&c['h41]&c['h4c]&c['h52]&c['h5d]&c['h55]&c['h54]&c['h5b]&c['h4a]&c['h6c]&c['h69]&c['h70]; // SYMBOL SHIFT <= Rhift & . & - & , & ; & " & \ & + & ( & ) & ? & Home & End & Ins
+  keys[7][2] <= c['h3a]&c['h49];         // M & .
+  keys[7][3] <= c['h31]&c['h41];         // N & ,
+  keys[7][4] <= c['h32];                 // B
 end
 
 
