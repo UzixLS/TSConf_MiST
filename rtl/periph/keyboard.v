@@ -329,7 +329,7 @@ always @(posedge clk) begin
   2'd0: begin
     if (!fifo_empty) begin
       fifo_rdreq <= 1'b1;
-      step <= step + 1'b1;
+      step <= 2'd1;
     end
   end
 
@@ -341,23 +341,22 @@ always @(posedge clk) begin
     else
       scancode <= fifo_q[7:0];
     if (scancode_ack)
-      step <= step + 1'b1;
+      step <= (fifo_q[8] || fifo_q[9])? 2'd2 : 2'd0;
   end
 
   2'd2: begin
     if (fifo_q[9] && fifo_q[8])
       scancode <= 8'hF0;
-    else if (fifo_q[8] || fifo_q[9])
+    else
       scancode <= fifo_q[7:0];
     if (scancode_ack)
-      step <= step + 1'b1;
+      step <= (fifo_q[8] && fifo_q[9])? 2'd3 : 2'd0;
   end
 
   2'd3: begin
-    if (fifo_q[9] && fifo_q[8])
-      scancode <= fifo_q[7:0];
+    scancode <= fifo_q[7:0];
     if (scancode_ack)
-      step <= step + 1'b1;
+      step <= 0;
   end
 
   endcase
