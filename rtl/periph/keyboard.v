@@ -8,6 +8,7 @@ module keyboard
   output reg  [7:0] scancode,
   input             scancode_ack,
   input             scancode_clr,
+  input             matrix_update,
   input      [10:0] ps2_key,
   input       [1:0] cfg_joystick1,
   input       [1:0] cfg_joystick2,
@@ -16,16 +17,34 @@ module keyboard
 );
 
 reg [4:0] keys [7:0];
+reg [4:0] keys_r [7:0];
 
-wire [4:0] row0 = a[0]? 5'b11111 : keys[0];
-wire [4:0] row1 = a[1]? 5'b11111 : keys[1];
-wire [4:0] row2 = a[2]? 5'b11111 : keys[2];
-wire [4:0] row3 = a[3]? 5'b11111 : keys[3];
-wire [4:0] row4 = a[4]? 5'b11111 : keys[4];
-wire [4:0] row5 = a[5]? 5'b11111 : keys[5];
-wire [4:0] row6 = a[6]? 5'b11111 : keys[6];
-wire [4:0] row7 = a[7]? 5'b11111 : keys[7];
+wire [4:0] row0 = a[0]? 5'b11111 : keys_r[0];
+wire [4:0] row1 = a[1]? 5'b11111 : keys_r[1];
+wire [4:0] row2 = a[2]? 5'b11111 : keys_r[2];
+wire [4:0] row3 = a[3]? 5'b11111 : keys_r[3];
+wire [4:0] row4 = a[4]? 5'b11111 : keys_r[4];
+wire [4:0] row5 = a[5]? 5'b11111 : keys_r[5];
+wire [4:0] row6 = a[6]? 5'b11111 : keys_r[6];
+wire [4:0] row7 = a[7]? 5'b11111 : keys_r[7];
 assign keyb = row0 & row1 & row2 & row3 & row4 & row5 & row6 & row7;
+
+
+reg matrix_update_r;
+always @(posedge clk)
+  matrix_update_r <= matrix_update;
+
+always @(posedge clk or posedge reset) begin
+  integer i;
+  if (reset) begin
+    for (i = 0; i < 8; i = i + 1)
+      keys_r[i] <= 5'b11111;
+  end
+  else if (matrix_update && !matrix_update_r) begin
+    for (i = 0; i < 8; i = i + 1)
+      keys_r[i] <= keys[i];
+  end
+end
 
 
 wire [15:0] joys = {joystick2, joystick1};

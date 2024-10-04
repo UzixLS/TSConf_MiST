@@ -939,6 +939,7 @@ module tsconf
     .scancode(key_scancode),
     .scancode_ack(key_scancode_ack),
     .scancode_clr(key_scancode_clr),
+    .matrix_update(VVSYNC),
     .ps2_key(PS2_KEY),
     .cfg_joystick1(CFG_JOYSTICK1),
     .cfg_joystick2(CFG_JOYSTICK2),
