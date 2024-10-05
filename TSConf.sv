@@ -391,7 +391,11 @@ assign UART_TX = uart_tx;
 
 //////////////////   VIDEO   ///////////////////
 reg VSync, HSync;
+reg [7:0] R_r, G_r, B_r;
 always @(posedge clk_sys) begin
+	R_r <= R;
+	G_r <= G;
+	B_r <= B;
 	HSync <= HS;
 	if(~HSync & HS) VSync <= VS;
 end
@@ -422,9 +426,9 @@ mist_video #(.COLOR_DEPTH(8), .SD_HCNT_WIDTH(11), .OUT_COLOR_DEPTH(VGA_BITS), .B
 	.blend       ( 1'b0       ),
 
 	// video in
-	.R           ( R ),
-	.G           ( G ),
-	.B           ( B ),
+	.R           ( R_r ),
+	.G           ( G_r ),
+	.B           ( B_r ),
 
 	.HSync       ( HSync      ),
 	.VSync       ( VSync      ),
