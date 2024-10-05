@@ -638,7 +638,7 @@ module zports
     if (comport_wr || comport_rd)
       wait_addr <= a[15:8];
 
-    if ((loa==PORTXT) && (hoa == DMAWPA))
+    if (portxt_wr && (hoa == DMAWPA))
       wait_addr <= din;
   end
 
